@@ -1,8 +1,5 @@
 <?php
 require_once('../includes/auth.php');
-// require_once('../includes/header.php');
-
-
 
 // Add this to fetch the profile picture:
 $sql = "SELECT image FROM accountsholder WHERE account = ?";
@@ -53,6 +50,7 @@ while ($row = mysqli_fetch_assoc($allTransactions)) {
         break;
     }
 }
+
 // Get monthly summary
 $currentMonth = date('Y-m');
 $sql = "SELECT 
@@ -85,25 +83,22 @@ $monthlySummary = mysqli_fetch_assoc($stmt->get_result());
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="language" content="English">
     <meta name="revisit-after" content="30 days">
-    <meta name="author" content="Your Name">
+    <meta name="author" content="Gold Coast Central Bank">
 
     <!-- favicons -->
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-<link rel="manifest" href="/site.webmanifest">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
-    <!-- Link Swiper's CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.css" />
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body class="light">
+<body>
     <div class="container">
         <nav class="sidebar" id="sidebar">
             <button id="btn_close">
@@ -114,8 +109,7 @@ $monthlySummary = mysqli_fetch_assoc($stmt->get_result());
             </button>
 
             <div class="logo">
-                <img src="../../gccb_logos/logo-transparent.svg" alt="">
-                <!-- <span>Gold Coast Central Bank</span> -->
+                <img src="../../gccb_logos/logo-transparent.svg" alt="Gold Coast Central Bank">
             </div>
 
             <div class="nav_links">
@@ -133,13 +127,6 @@ $monthlySummary = mysqli_fetch_assoc($stmt->get_result());
                     <div class="nav_link_text">Load</div>
                 </a>
 
-                <!-- <a href="../transactions/withdrawal.php" class="nav_link" aria-label="withdraw">
-                    <div class="nav_link_icon">
-                        <i class="fas fa-hand-holding-usd"></i>
-                    </div>
-                    <div class="nav_link_text">Withdraw</div>
-                </a> -->
-
                 <a href="../transactions/transfer.php" class="nav_link" aria-label="transfer">
                     <div class="nav_link_icon">
                         <i class="fas fa-exchange-alt"></i>
@@ -153,13 +140,6 @@ $monthlySummary = mysqli_fetch_assoc($stmt->get_result());
                     </div>
                     <div class="nav_link_text">History</div>
                 </a>
-<!-- 
-                <a href="../profile/view.php" class="nav_link" aria-label="profile">
-                    <div class="nav_link_icon">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <div class="nav_link_text">Profile</div>
-                </a> -->
 
                 <a href="../settings/password.php" class="nav_link" aria-label="settings">
                     <div class="nav_link_icon">
@@ -171,13 +151,13 @@ $monthlySummary = mysqli_fetch_assoc($stmt->get_result());
 
             <div class="profile">
                 <div class="img_with_name">
-         <a href="../pages/profile.php">
-            <?php if (!empty($profilePic)): ?>
-                <img src="data:image/jpeg;base64,<?= base64_encode($profilePic) ?>" alt="Profile Picture">
-            <?php else: ?>
-                <img src="../images/default-profile.png" alt="Profile Picture">
-            <?php endif; ?>
-        </a>
+                    <a href="../pages/profile.php">
+                        <?php if (!empty($profilePic)): ?>
+                            <img src="data:image/jpeg;base64,<?= base64_encode($profilePic) ?>" alt="Profile Picture">
+                        <?php else: ?>
+                            <img src="../images/default-profile.png" alt="Profile Picture">
+                        <?php endif; ?>
+                    </a>
                     <div class="profile_text">
                         <p class="name"><?= htmlspecialchars($_SESSION['client_name']) ?></p>
                         <p class="occupation"><?= htmlspecialchars($accountInfo['account_type'] ?? 'Account') ?></p>
@@ -197,211 +177,210 @@ $monthlySummary = mysqli_fetch_assoc($stmt->get_result());
                         <path d="M3 4h18v2H3V4zm0 7h12v2H3v-2zm0 7h18v2H3v-2z" /></svg>
                 </button>
                 <div class="overview_text">
-                    <p class="title">Dashboard</p>
-                    <p class="desc">Hi <?= htmlspecialchars(explode(' ', $_SESSION['client_name'])[0]) ?>, welcome back!</p>
+                    <h1>Dashboard</h1>
+                    <p class="welcome">Hi <?= htmlspecialchars(explode(' ', $_SESSION['client_name'])[0]) ?>, welcome back!</p>
                 </div>
 
                 <div class="topbar_icons">
-                    <a href="#" aria-label="search" class="topbar_icon">
-                        <i class="fas fa-search"></i>
-                    </a>
                     <a href="#" aria-label="notifications" class="topbar_icon alert">
                         <i class="fas fa-bell"></i>
                     </a>
                 </div>
             </div>
 
-            <section>
+            <section class="content_section">
                 <main>
-                    <!-- <div class="overview_text">
-                        <p class="title">Dashboard</p>
-                        <p class="desc">Hi <?= htmlspecialchars(explode(' ', $_SESSION['client_name'])[0]) ?>, welcome back!</p>
-                    </div> -->
-
-                    <div class="bank_balance_card">
-                        <p>your balance</p>
-                        <p class="balance">GHC<?= number_format($_SESSION['client_balance'], 2) ?></p>
-                        <div class="account_no">
-                            <span><?= htmlspecialchars($accountInfo['account_type'] ?? 'Account') ?> : <span class="no"><?= htmlspecialchars($_SESSION['client_account']) ?></span></span>
+                    <div class="balance_card">
+                        <div class="balance_header">
+                            <span>Your Balance</span>
+                            <span><?= htmlspecialchars($accountInfo['account_type'] ?? 'Account') ?></span>
+                        </div>
+                        <div class="balance_amount">
+                            GHC<?= number_format($_SESSION['client_balance'], 2) ?>
+                        </div>
+                        <div class="account_details">
+                            <span>Account: <span class="account_no"><?= htmlspecialchars($_SESSION['client_account']) ?></span></span>
                             <button class="view_account_no" aria-label="show_ac">
                                 <i class="fas fa-eye-slash"></i>
                             </button>
                         </div>
                     </div>
 
-                    <div class="button_group">
-                        <a href="../transactions/history.php" class="r_transaction" aria-label="show_transaction">
+                    <div class="action_buttons">
+                        <a href="../transactions/history.php" class="btn btn-primary">
                             <i class="fas fa-exchange-alt"></i>
-                            <span>recent transactions</span>
+                            <span>Recent Transactions</span>
                         </a>
-
-                        <a href="../transactions/statement.php" class="s_analysis" aria-label="show_analysis">
+                        <a href="../transactions/statement.php" class="btn btn-secondary">
                             <i class="fas fa-file-invoice-dollar"></i>
-                            <span>account statement</span>
+                            <span>Account Statement</span>
                         </a>
                     </div>
 
-<div class="transaction_info">
-    <div class="transaction_date">
-        <!-- Recent Transactions -->
-        <hr class="transaction_divider">
-        <div class="transaction_day_label">Today - <?= date('F j, Y') ?></div>
-    </div>
+                    <div class="transactions_section">
+                        <h3>Recent Transactions</h3>
+                        
+                        <div class="transaction_day_group">
+                            <h4>Today - <?= date('F j, Y') ?></h4>
+                            <?php if (empty($todayTransactions)): ?>
+                                <div class="no_transactions">
+                                    <p>No transactions today</p>
+                                </div>
+                            <?php else: ?>
+                                <?php foreach ($todayTransactions as $row): ?>
+                                    <?php
+                                    $isOutgoing = $row['sender'] == $account;
+                                    $amountClass = $isOutgoing ? 'outgoing' : 'incoming';
+                                    $amountSign = $isOutgoing ? '-' : '+';
+                                    $transactionText = '';
+                                    
+                                    switch($row['type_name']) {
+                                        case 'Transfer':
+                                            $transactionText = "Transfer to {$row['r_name']}";
+                                            break;
+                                        case 'Payment Recieved':
+                                            $transactionText = "Payment received from {$row['s_name']}";
+                                            break;
+                                        case 'Withdrawal':
+                                            $transactionText = "Cash withdrawal";
+                                            break;
+                                        case 'Deposit':
+                                            $transactionText = "Deposit";
+                                            break;
+                                        default:
+                                            $transactionText = $row['type_name'];
+                                    }
+                                    ?>
+                                    <div class="transaction_item <?= $amountClass ?>">
+                                        <div class="transaction_icon">
+                                            <?php if($isOutgoing): ?>
+                                                <i class="fas fa-arrow-up"></i>
+                                            <?php else: ?>
+                                                <i class="fas fa-arrow-down"></i>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="transaction_details">
+                                            <p class="transaction_title"><?= htmlspecialchars($transactionText) ?></p>
+                                            <p class="transaction_desc"><?= htmlspecialchars($row['description']) ?></p>
+                                        </div>
+                                        <div class="transaction_amount">
+                                            <?= $amountSign ?> GHC<?= number_format($row['amount'], 2) ?>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
 
-    <?php if (empty($todayTransactions)): ?>
-        <div class="transaction_data">
-            <p>No transactions today</p>
-        </div>
-    <?php else: ?>
-        <?php foreach ($todayTransactions as $row): ?>
-            <?php
-            $isOutgoing = $row['sender'] == $account;
-            $amountClass = $isOutgoing ? 'text-danger' : 'text-success';
-            $amountSign = $isOutgoing ? '-' : '+';
-            $transactionText = '';
-            
-            switch($row['type_name']) {
-                case 'Transfer':
-                    $transactionText = "Transfer to {$row['r_name']}";
-                    break;
-                case 'Payment Recieved':
-                    $transactionText = "Payment received from {$row['s_name']}";
-                    break;
-                case 'Withdrawal':
-                    $transactionText = "Cash withdrawal";
-                    break;
-                case 'Deposit':
-                    $transactionText = "Deposit";
-                    break;
-                default:
-                    $transactionText = $row['type_name'];
-            }
-            ?>
-            <div class="transaction_data">
-                <div class="get_send_money">
-                    <span class="icon <?= $isOutgoing ? 'outgoing' : 'incoming' ?>">
-                        <?php if($isOutgoing): ?>
-                            <i class="fas fa-arrow-up"></i>
-                        <?php else: ?>
-                            <i class="fas fa-arrow-down"></i>
+                        <?php if (!empty($yesterdayTransactions)): ?>
+                            <div class="transaction_day_group">
+                                <h4>Yesterday - <?= date('F j, Y', strtotime('-1 day')) ?></h4>
+                                <?php foreach ($yesterdayTransactions as $row): ?>
+                                    <?php
+                                    $isOutgoing = $row['sender'] == $account;
+                                    $amountClass = $isOutgoing ? 'outgoing' : 'incoming';
+                                    $amountSign = $isOutgoing ? '-' : '+';
+                                    $transactionText = '';
+                                    
+                                    switch($row['type_name']) {
+                                        case 'Transfer':
+                                            $transactionText = "Transfer to {$row['r_name']}";
+                                            break;
+                                        case 'Payment Recieved':
+                                            $transactionText = "Payment received from {$row['s_name']}";
+                                            break;
+                                        case 'Withdrawal':
+                                            $transactionText = "Cash withdrawal";
+                                            break;
+                                        case 'Deposit':
+                                            $transactionText = "Deposit";
+                                            break;
+                                        default:
+                                            $transactionText = $row['type_name'];
+                                    }
+                                    ?>
+                                    <div class="transaction_item <?= $amountClass ?>">
+                                        <div class="transaction_icon">
+                                            <?php if($isOutgoing): ?>
+                                                <i class="fas fa-arrow-up"></i>
+                                            <?php else: ?>
+                                                <i class="fas fa-arrow-down"></i>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="transaction_details">
+                                            <p class="transaction_title"><?= htmlspecialchars($transactionText) ?></p>
+                                            <p class="transaction_desc"><?= htmlspecialchars($row['description']) ?></p>
+                                        </div>
+                                        <div class="transaction_amount">
+                                            <?= $amountSign ?> GHC<?= number_format($row['amount'], 2) ?>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
                         <?php endif; ?>
-                    </span>
-                    <div class="trasaction_details">
-                        <p class="transaction_metadata"><?= htmlspecialchars($transactionText) ?></p>
-                        <p><?= htmlspecialchars($row['description']) ?></p>
-                    </div>
-                </div>
-                <p class="transaction_value <?= $amountClass ?>">
-                    <?= $amountSign ?> GHC<?= number_format($row['amount'], 2) ?>
-                </p>
-            </div>
-        <?php endforeach; ?>
-    <?php endif; ?>
 
-    <?php if (!empty($yesterdayTransactions)): ?>
-        <hr class="transaction_divider">
-        <div class="transaction_day_label">Yesterday - <?= date('F j, Y', strtotime('-1 day')) ?></div>
-        
-        <?php foreach ($yesterdayTransactions as $row): ?>
-            <?php
-            $isOutgoing = $row['sender'] == $account;
-            $amountClass = $isOutgoing ? 'text-danger' : 'text-success';
-            $amountSign = $isOutgoing ? '-' : '+';
-            $transactionText = '';
-            
-            switch($row['type_name']) {
-                case 'Transfer':
-                    $transactionText = "Transfer to {$row['r_name']}";
-                    break;
-                case 'Payment Recieved':
-                    $transactionText = "Payment received from {$row['s_name']}";
-                    break;
-                case 'Withdrawal':
-                    $transactionText = "Cash withdrawal";
-                    break;
-                case 'Deposit':
-                    $transactionText = "Deposit";
-                    break;
-                default:
-                    $transactionText = $row['type_name'];
-            }
-            ?>
-            <div class="transaction_data">
-                <div class="get_send_money">
-                    <span class="icon <?= $isOutgoing ? 'outgoing' : 'incoming' ?>">
-                        <?php if($isOutgoing): ?>
-                            <i class="fas fa-arrow-up"></i>
-                        <?php else: ?>
-                            <i class="fas fa-arrow-down"></i>
-                        <?php endif; ?>
-                    </span>
-                    <div class="trasaction_details">
-                        <p class="transaction_metadata"><?= htmlspecialchars($transactionText) ?></p>
-                        <p><?= htmlspecialchars($row['description']) ?></p>
+                        <a href="../transactions/history.php" class="view_all_transactions">
+                            <i class="fas fa-chevron-down"></i> View All Transactions
+                        </a>
                     </div>
-                </div>
-                <p class="transaction_value <?= $amountClass ?>">
-                    <?= $amountSign ?> GHC<?= number_format($row['amount'], 2) ?>
-                </p>
-            </div>
-        <?php endforeach; ?>
-    <?php endif; ?>
-</div>
-
-                    <a href="../transactions/history.php" class="show_more" aria-label="show_more">
-                        <i class="fas fa-chevron-down"></i> View All Transactions
-                    </a>
                 </main>
 
                 <aside>
-                    <div class="transfer_money_section">
-                        <p class="title">quick actions</p>
-                        <div class="button_group">
-                            <a href="../transactions/deposit.php" class="via_no" aria-label="deposit">Deposit</a>
-                            <a href="../transactions/withdrawal.php" class="via_ac" aria-label="withdraw">Withdraw</a>
+                    <div class="quick_actions">
+                        <h3>Quick Actions</h3>
+                        <div class="action_buttons">
+                            <a href="../transactions/deposit.php" class="btn btn-primary">
+                                <i class="fas fa-money-bill-wave"></i>
+                                <span>Deposit</span>
+                            </a>
+                            <a href="../transactions/withdrawal.php" class="btn btn-secondary">
+                                <i class="fas fa-hand-holding-usd"></i>
+                                <span>Withdraw</span>
+                            </a>
                         </div>
 
-                        <form action="../transactions/transfer.php" method="GET">
-                            <div class="phone_no_info">
-                                <label for="account_no"><i class="fas fa-user"></i></label>
-                                <input type="text" name="account" id="account_no" placeholder="Recipient Account">
+                        <form action="../transactions/transfer.php" method="GET" class="transfer_form">
+                            <div class="form_group">
+                                <label for="account_no"><i class="fas fa-user"></i> Recipient Account</label>
+                                <input type="text" name="account" id="account_no" placeholder="Enter account number">
                             </div>
 
-                            <div class="amount">
-                                <div>
-                                    <label for="cedis">GHC</label>
-                                    <input type="number" name="amount" id="cedis" placeholder="Amount" min="1" step="0.01">
-                                </div>
-                                <span>₵</span>
+                            <div class="form_group">
+                                <label for="cedis">Amount (GHC)</label>
+                                <input type="number" name="amount" id="cedis" placeholder="0.00" min="1" step="0.01">
                             </div>
 
-                            <input type="submit" value="Transfer Funds" />
+                            <button type="submit" class="btn btn-primary full-width">
+                                <i class="fas fa-paper-plane"></i> Transfer Funds
+                            </button>
                         </form>
                     </div>
 
-                    <div class="cards">
-                        <div class="title_with_button">
-                            <p class="title">account summary</p>
-                        </div>
-
-                        <div class="account_summary">
+                    <div class="account_summary">
+                        <h3>Account Summary</h3>
+                        <div class="summary_items">
                             <div class="summary_item">
-                                <i class="fas fa-wallet"></i>
-                                <div>
+                                <div class="summary_icon income">
+                                    <i class="fas fa-wallet"></i>
+                                </div>
+                                <div class="summary_details">
                                     <p>Monthly Income</p>
                                     <p>GHC<?= number_format($monthlySummary['income'] ?? 0, 2) ?></p>
                                 </div>
                             </div>
                             <div class="summary_item">
-                                <i class="fas fa-shopping-cart"></i>
-                                <div>
+                                <div class="summary_icon expense">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </div>
+                                <div class="summary_details">
                                     <p>Monthly Expenses</p>
                                     <p>GHC<?= number_format(abs($monthlySummary['expenses'] ?? 0), 2) ?></p>
                                 </div>
                             </div>
                             <div class="summary_item">
-                                <i class="fas fa-exchange-alt"></i>
-                                <div>
+                                <div class="summary_icon transactions">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </div>
+                                <div class="summary_details">
                                     <p>Total Transactions</p>
                                     <p><?= $monthlySummary['count'] ?? 0 ?></p>
                                 </div>
@@ -412,9 +391,6 @@ $monthlySummary = mysqli_fetch_assoc($stmt->get_result());
             </section>
         </section>
     </div>
-
-    <!-- Swiper JS -->
-    <script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
 
     <!-- Custom JS -->
     <script src="../js/main.js"></script>
@@ -430,7 +406,7 @@ $monthlySummary = mysqli_fetch_assoc($stmt->get_result());
 
         // Account number toggle
         document.querySelector('.view_account_no').addEventListener('click', function() {
-            const accountNo = document.querySelector('.account_no .no');
+            const accountNo = document.querySelector('.account_no');
             const icon = this.querySelector('i');
             
             if(accountNo.style.filter === 'blur(4px)') {

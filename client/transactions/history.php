@@ -1,6 +1,5 @@
 <?php
 require_once('../includes/auth.php');
-// require_once('../includes/header.php');
 
 // Pagination
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -16,7 +15,7 @@ $maxAmount = isset($_GET['max_amount']) ? (float)$_GET['max_amount'] : null;
 $direction = isset($_GET['direction']) ? $_GET['direction'] : null;
 $search = isset($_GET['search']) ? trim($_GET['search']) : null;
 
-// Base query - Only show transactions where the current account is the owner
+// Base query
 $sql = "SELECT SQL_CALC_FOUND_ROWS h.*, t.name as type_name, t.description as type_description 
         FROM account_history h
         JOIN transaction_types t ON h.type = t.id
@@ -105,7 +104,7 @@ $types = mysqli_query($con, "SELECT * FROM transaction_types ORDER BY name");
     <link rel="stylesheet" href="../dashboard/style.css">
     <link rel="stylesheet" href="history.css">
 </head>
-<body class="light">
+<body>
     <div class="container">
         <nav class="sidebar" id="sidebar">
             <button id="btn_close">
@@ -116,7 +115,7 @@ $types = mysqli_query($con, "SELECT * FROM transaction_types ORDER BY name");
             </button>
 
             <div class="logo">
-                <img src="../../gccb_logos/logo-transparent.svg" alt="">
+                <img src="../../gccb_logos/logo-transparent.svg" alt="Gold Coast Central Bank">
             </div>
 
             <div class="nav_links">
@@ -155,13 +154,6 @@ $types = mysqli_query($con, "SELECT * FROM transaction_types ORDER BY name");
                     <div class="nav_link_text">History</div>
                 </a>
 
-                <a href="../profile/view.php" class="nav_link" aria-label="profile">
-                    <div class="nav_link_icon">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <div class="nav_link_text">Profile</div>
-                </a>
-
                 <a href="../settings/password.php" class="nav_link" aria-label="settings">
                     <div class="nav_link_icon">
                         <i class="fas fa-lock"></i>
@@ -172,7 +164,7 @@ $types = mysqli_query($con, "SELECT * FROM transaction_types ORDER BY name");
 
             <div class="profile">
                 <div class="img_with_name">
-                    <img src="../images/profile_pic3.webp" alt="">
+                    <img src="../images/default-profile.png" alt="Profile Picture">
                     <div class="profile_text">
                         <p class="name"><?= htmlspecialchars($_SESSION['client_name']) ?></p>
                         <p class="occupation"><?= htmlspecialchars($_SESSION['client_account_type'] ?? 'Account') ?></p>
@@ -192,163 +184,136 @@ $types = mysqli_query($con, "SELECT * FROM transaction_types ORDER BY name");
                         <path d="M3 4h18v2H3V4zm0 7h12v2H3v-2zm0 7h18v2H3v-2z" /></svg>
                 </button>
                 <div class="overview_text">
-                    <p class="title">Transaction History</p>
-                    <p class="desc">View your account activity</p>
+                    <h1>Transaction History</h1>
+                    <p class="welcome">View your account activity and transactions</p>
                 </div>
 
                 <div class="topbar_icons">
-                    <a href="#" aria-label="search" class="topbar_icon">
-                        <i class="fas fa-search"></i>
-                    </a>
                     <a href="#" aria-label="notifications" class="topbar_icon alert">
                         <i class="fas fa-bell"></i>
                     </a>
                 </div>
             </div>
 
-            <div class="history-container">
-                <div class="history-header">
-                    <h1></h1>
-                    <div class="header-actions">
-                        <form method="GET" class="search-form">
-                            <div class="search-input">
-                                <i class="fas fa-search"></i>
-                                <input type="text" name="search" placeholder="Search transactions..." value="<?= htmlspecialchars($search) ?>">
-                                <button type="submit" class="btn-search">Search</button>
+            <section class="transfer_section">
+                <main class="transfer_main">
+                    <div class="transfer_card">
+                        <div class="transfer_header">
+                            <div class="transfer_icon">
+                                <i class="fas fa-history"></i>
                             </div>
-                        </form>
-                        <button class="btn-export">
-                            <i class="fas fa-download"></i> Export
-                        </button>
-                    </div>
-                </div>
+                            <div>
+                                <h2>Transaction History</h2>
+                                <p>View and filter your account transactions</p>
+                            </div>
+                        </div>
 
-                <!-- Summary Cards -->
-                <div class="summary-cards">
-                    <div class="summary-card">
-                        <div class="summary-icon">
-                            <i class="fas fa-arrow-down"></i>
+                        <!-- Summary Cards -->
+                        <div class="summary-cards">
+                            <div class="info_card">
+                                <h3><i class="fas fa-arrow-down success"></i> Total Incoming</h3>
+                                <p>GHC<?php
+                                    $sql = "SELECT SUM(amount) as total FROM account_history 
+                                            WHERE reciever = ? AND account = reciever";
+                                    $stmt = mysqli_prepare($con, $sql);
+                                    mysqli_stmt_bind_param($stmt, "s", $_SESSION['client_account']);
+                                    mysqli_stmt_execute($stmt);
+                                    $result = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+                                    echo number_format($result['total'] ?? 0, 2);
+                                ?></p>
+                            </div>
+                            
+                            <div class="info_card">
+                                <h3><i class="fas fa-arrow-up warning"></i> Total Outgoing</h3>
+                                <p>GHC<?php
+                                    $sql = "SELECT SUM(amount) as total FROM account_history 
+                                            WHERE sender = ? AND account = sender";
+                                    $stmt = mysqli_prepare($con, $sql);
+                                    mysqli_stmt_bind_param($stmt, "s", $_SESSION['client_account']);
+                                    mysqli_stmt_execute($stmt);
+                                    $result = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+                                    echo number_format(abs($result['total'] ?? 0), 2);
+                                ?></p>
+                            </div>
+                            
+                            <div class="info_card">
+                                <h3><i class="fas fa-exchange-alt primary"></i> Total Transactions</h3>
+                                <p><?= number_format($totalRows) ?></p>
+                            </div>
                         </div>
-                        <div class="summary-content">
-                            <h3>Total Incoming</h3>
-                            <p>GHC<?php
-                                $sql = "SELECT SUM(amount) as total FROM account_history 
-                                        WHERE reciever = ? AND account = reciever";
-                                $stmt = mysqli_prepare($con, $sql);
-                                mysqli_stmt_bind_param($stmt, "s", $_SESSION['client_account']);
-                                mysqli_stmt_execute($stmt);
-                                $result = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
-                                echo number_format($result['total'] ?? 0, 2);
-                            ?></p>
-                        </div>
-                    </div>
-                    
-                    <div class="summary-card">
-                        <div class="summary-icon">
-                            <i class="fas fa-arrow-up"></i>
-                        </div>
-                        <div class="summary-content">
-                            <h3>Total Outgoing</h3>
-                            <p>GHC<?php
-                                $sql = "SELECT SUM(amount) as total FROM account_history 
-                                        WHERE sender = ? AND account = sender";
-                                $stmt = mysqli_prepare($con, $sql);
-                                mysqli_stmt_bind_param($stmt, "s", $_SESSION['client_account']);
-                                mysqli_stmt_execute($stmt);
-                                $result = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
-                                echo number_format(abs($result['total'] ?? 0), 2);
-                            ?></p>
-                        </div>
-                    </div>
-                    
-                    <div class="summary-card">
-                        <div class="summary-icon">
-                            <i class="fas fa-exchange-alt"></i>
-                        </div>
-                        <div class="summary-content">
-                            <h3>Total Transactions</h3>
-                            <p><?= number_format($totalRows) ?></p>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Filters -->
-                <div class="filters-card">
-                    <h3>Filter Transactions</h3>
-                    <form method="GET" class="filter-form">
-                        <div class="filter-row">
-                            <div class="filter-group">
-                                <label>Transaction Type</label>
-                                <select name="type">
-                                    <option value="">All Types</option>
-                                    <?php while ($type = mysqli_fetch_assoc($types)): ?>
-                                        <option value="<?= $type['id'] ?>" <?= $typeFilter == $type['id'] ? 'selected' : '' ?>>
-                                            <?= htmlspecialchars($type['name']) ?>
-                                        </option>
-                                    <?php endwhile; ?>
-                                </select>
-                            </div>
-                            
-                            <div class="filter-group">
-                                <label>Direction</label>
-                                <select name="direction">
-                                    <option value="">All</option>
-                                    <option value="in" <?= $direction === 'in' ? 'selected' : '' ?>>Incoming</option>
-                                    <option value="out" <?= $direction === 'out' ? 'selected' : '' ?>>Outgoing</option>
-                                </select>
-                            </div>
-                            
-                            <div class="filter-group">
-                                <label>Date From</label>
-                                <input type="date" name="date_from" value="<?= htmlspecialchars($dateFrom) ?>">
-                            </div>
-                            
-                            <div class="filter-group">
-                                <label>Date To</label>
-                                <input type="date" name="date_to" value="<?= htmlspecialchars($dateTo) ?>">
-                            </div>
+                        <!-- Filters -->
+                        <div class="transfer_card">
+                            <h3><i class="fas fa-filter"></i> Filter Transactions</h3>
+                            <form method="GET" class="transfer_form">
+                                <div class="form_group">
+                                    <label>Transaction Type</label>
+                                    <select name="type">
+                                        <option value="">All Types</option>
+                                        <?php while ($type = mysqli_fetch_assoc($types)): ?>
+                                            <option value="<?= $type['id'] ?>" <?= $typeFilter == $type['id'] ? 'selected' : '' ?>>
+                                                <?= htmlspecialchars($type['name']) ?>
+                                            </option>
+                                        <?php endwhile; ?>
+                                    </select>
+                                </div>
+                                
+                                <div class="form_group">
+                                    <label>Direction</label>
+                                    <select name="direction">
+                                        <option value="">All</option>
+                                        <option value="in" <?= $direction === 'in' ? 'selected' : '' ?>>Incoming</option>
+                                        <option value="out" <?= $direction === 'out' ? 'selected' : '' ?>>Outgoing</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form_group">
+                                    <label>Date From</label>
+                                    <input type="date" name="date_from" value="<?= htmlspecialchars($dateFrom) ?>">
+                                </div>
+                                
+                                <div class="form_group">
+                                    <label>Date To</label>
+                                    <input type="date" name="date_to" value="<?= htmlspecialchars($dateTo) ?>">
+                                </div>
+                                
+                                <div class="form_group">
+                                    <label>Min Amount (GHC)</label>
+                                    <input type="number" name="min_amount" step="0.01" value="<?= htmlspecialchars($minAmount) ?>">
+                                </div>
+                                
+                                <div class="form_group">
+                                    <label>Max Amount (GHC)</label>
+                                    <input type="number" name="max_amount" step="0.01" value="<?= htmlspecialchars($maxAmount) ?>">
+                                </div>
+                                
+                                <div class="form_group">
+                                    <label>Search</label>
+                                    <input type="text" name="search" placeholder="Search transactions..." value="<?= htmlspecialchars($search) ?>">
+                                </div>
+                                
+                                <div class="form_group" style="display: flex; gap: 15px; margin-top: 20px;">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-filter"></i> Apply Filters
+                                    </button>
+                                    <a href="history.php" class="btn btn-outline">
+                                        <i class="fas fa-redo"></i> Reset
+                                    </a>
+                                </div>
+                            </form>
                         </div>
-                        
-                        <div class="filter-row">
-                            <div class="filter-group">
-                                <label>Min Amount (GHC)</label>
-                                <input type="number" name="min_amount" step="0.01" value="<?= htmlspecialchars($minAmount) ?>">
-                            </div>
-                            
-                            <div class="filter-group">
-                                <label>Max Amount (GHC)</label>
-                                <input type="number" name="max_amount" step="0.01" value="<?= htmlspecialchars($maxAmount) ?>">
-                            </div>
-                            
-                            <div class="filter-actions">
-                                <button type="submit" class="btn-filter">
-                                    <i class="fas fa-filter"></i> Apply Filters
+
+                        <!-- Transactions Table -->
+                        <div class="transfer_card">
+                            <div class="transfer_header" style="margin-bottom: 20px;">
+                                <h3><i class="fas fa-list"></i> Transaction List</h3>
+                                <button class="btn btn-outline">
+                                    <i class="fas fa-download"></i> Export
                                 </button>
-                                <a href="history.php" class="btn-reset">
-                                    <i class="fas fa-redo"></i> Reset
-                                </a>
                             </div>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Transactions Table -->
-                <div class="transactions-card">
-                    <div class="table-responsive">
-                        <table class="transactions-table">
-                            <thead>
-                                <tr>
-                                    <th>Date & Time</th>
-                                    <th>Type</th>
-                                    <th>Counterparty</th>
-                                    <th>Description</th>
-                                    <th>Amount</th>
-                                    <th>Reference</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if (mysqli_num_rows($transactions) > 0): ?>
+                            
+                            <?php if (mysqli_num_rows($transactions) > 0): ?>
+                                <ul class="info_list">
                                     <?php while ($row = mysqli_fetch_assoc($transactions)): ?>
                                         <?php
                                         $isOutgoing = $row['sender'] == $_SESSION['client_account'];
@@ -358,123 +323,131 @@ $types = mysqli_query($con, "SELECT * FROM transaction_types ORDER BY name");
                                         $directionText = $isOutgoing ? 'To' : 'From';
                                         $amountClass = $isOutgoing ? 'outgoing' : 'incoming';
                                         $amountSign = $isOutgoing ? '-' : '+';
-                                        
-                                        // Get transaction type color
-                                        $typeColors = [
-                                            'Transfer' => $isOutgoing ? 'type-outgoing' : 'type-incoming',
-                                            'Payment Received' => 'type-incoming',
-                                            'Deposit' => 'type-incoming',
-                                            'Withdrawal' => 'type-withdrawal',
-                                            'Bill Payment' => 'type-bill',
-                                            'Online Payment' => 'type-online',
-                                            'Interest' => 'type-interest',
-                                            'Fee' => 'type-fee'
-                                        ];
-                                        $typeClass = $typeColors[$typeName] ?? 'type-default';
                                         ?>
-                                        <tr>
-                                            <td>
-                                                <div class="transaction-date">
-                                                    <?= date('M j, Y', strtotime($row['dt'])) ?>
-                                                </div>
-                                                <div class="transaction-time">
-                                                    <?= date('h:i A', strtotime($row['tm'])) ?>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <span class="transaction-type <?= $typeClass ?>">
-                                                    <?= htmlspecialchars($typeName) ?>
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <?php if ($peerName): ?>
-                                                    <div class="counterparty">
-                                                        <span class="direction"><?= $directionText ?></span>
-                                                        <?= htmlspecialchars($peerName) ?>
+                                        <li style="padding: 15px 0; border-bottom: 1px solid var(--light-gray);">
+                                            <div style="display: flex; justify-content: space-between; width: 100%;">
+                                                <div style="flex: 1;">
+                                                    <div style="display: flex; align-items: center; gap: 15px;">
+                                                        <div style="width: 40px; height: 40px; border-radius: 50%; background: <?= $isOutgoing ? 'rgba(220, 53, 69, 0.1)' : 'rgba(40, 167, 69, 0.1)'; ?>; display: flex; align-items: center; justify-content: center; color: <?= $isOutgoing ? 'var(--danger-red)' : 'var(--success-green)'; ?>;">
+                                                            <i class="fas fa-<?= $isOutgoing ? 'arrow-up' : 'arrow-down' ?>"></i>
+                                                        </div>
+                                                        <div>
+                                                            <strong><?= htmlspecialchars($typeName) ?></strong>
+                                                            <p style="margin: 5px 0 0 0; color: var(--medium-gray); font-size: 14px;">
+                                                                <?= date('M j, Y h:i A', strtotime($row['dt'] . ' ' . $row['tm'])) ?>
+                                                            </p>
+                                                            <?php if ($peerName): ?>
+                                                                <p style="margin: 5px 0 0 0; color: var(--medium-gray); font-size: 14px;">
+                                                                    <?= $directionText ?> <?= htmlspecialchars($peerName) ?>
+                                                                </p>
+                                                            <?php endif; ?>
+                                                            <p style="margin: 5px 0 0 0; color: var(--medium-gray); font-size: 14px;">
+                                                                <?= htmlspecialchars($row['description']) ?>
+                                                            </p>
+                                                        </div>
                                                     </div>
-                                                <?php else: ?>
-                                                    <span class="text-muted">N/A</span>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td><?= htmlspecialchars($row['description']) ?></td>
-                                            <td class="amount <?= $amountClass ?>">
-                                                <?= $amountSign ?>GHC<?= number_format($row['amount'], 2) ?>
-                                            </td>
-                                            <td>
-                                                <a href="receipt.php?id=<?= $row['no'] ?>" class="reference-link">
-                                                    <?= htmlspecialchars($row['reference_number']) ?>
-                                                </a>
-                                            </td>
-                                            <td>
-                                                <div class="transaction-actions">
-                                                    <a href="receipt.php?id=<?= $row['no'] ?>" class="action-btn" title="View Receipt">
-                                                        <i class="fas fa-receipt"></i>
-                                                    </a>
-                                                    <button class="action-btn" title="Report Issue">
-                                                        <i class="fas fa-flag"></i>
-                                                    </button>
                                                 </div>
-                                            </td>
-                                        </tr>
+                                                <div style="text-align: right;">
+                                                    <strong style="color: <?= $isOutgoing ? 'var(--danger-red)' : 'var(--success-green)'; ?>;">
+                                                        <?= $amountSign ?>GHC<?= number_format($row['amount'], 2) ?>
+                                                    </strong>
+                                                    <p style="margin: 5px 0 0 0; color: var(--medium-gray); font-size: 14px;">
+                                                        Ref: <?= htmlspecialchars($row['reference_number']) ?>
+                                                    </p>
+                                                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
+                                                        <a href="receipt.php?id=<?= $row['no'] ?>" class="btn btn-outline" style="padding: 5px 10px; font-size: 12px;">
+                                                            <i class="fas fa-receipt"></i> Receipt
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
                                     <?php endwhile; ?>
-                                <?php else: ?>
-                                    <tr>
-                                        <td colspan="7" class="no-transactions">
-                                            <i class="fas fa-info-circle"></i>
-                                            No transactions found matching your criteria
-                                        </td>
-                                    </tr>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Pagination -->
-                    <?php if ($totalPages > 1): ?>
-                        <div class="pagination">
-                            <?php if ($page > 1): ?>
-                                <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page - 1])) ?>" class="page-link">
-                                    <i class="fas fa-chevron-left"></i> Previous
-                                </a>
+                                </ul>
+                            <?php else: ?>
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-info-circle"></i> No transactions found matching your criteria
+                                </div>
                             <?php endif; ?>
-                            
-                            <div class="page-numbers">
-                                <?php
-                                $startPage = max(1, $page - 2);
-                                $endPage = min($totalPages, $page + 2);
-                                
-                                if ($startPage > 1) {
-                                    echo '<a href="?'.http_build_query(array_merge($_GET, ['page' => 1])).'" class="page-link">1</a>';
-                                    if ($startPage > 2) echo '<span class="page-dots">...</span>';
-                                }
-                                
-                                for ($i = $startPage; $i <= $endPage; $i++): ?>
-                                    <a href="?<?= http_build_query(array_merge($_GET, ['page' => $i])) ?>" class="page-link <?= $i == $page ? 'active' : '' ?>">
-                                        <?= $i ?>
-                                    </a>
-                                <?php endfor;
-                                
-                                if ($endPage < $totalPages) {
-                                    if ($endPage < $totalPages - 1) echo '<span class="page-dots">...</span>';
-                                    echo '<a href="?'.http_build_query(array_merge($_GET, ['page' => $totalPages])).'" class="page-link">'.$totalPages.'</a>';
-                                }
-                                ?>
-                            </div>
-                            
-                            <?php if ($page < $totalPages): ?>
-                                <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page + 1])) ?>" class="page-link">
-                                    Next <i class="fas fa-chevron-right"></i>
-                                </a>
+
+                            <!-- Pagination -->
+                            <?php if ($totalPages > 1): ?>
+                                <div style="display: flex; justify-content: center; margin-top: 20px; gap: 10px;">
+                                    <?php if ($page > 1): ?>
+                                        <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page - 1])) ?>" class="btn btn-outline">
+                                            <i class="fas fa-chevron-left"></i> Previous
+                                        </a>
+                                    <?php endif; ?>
+                                    
+                                    <div style="display: flex; gap: 5px;">
+                                        <?php
+                                        $startPage = max(1, $page - 2);
+                                        $endPage = min($totalPages, $page + 2);
+                                        
+                                        if ($startPage > 1) {
+                                            echo '<a href="?'.http_build_query(array_merge($_GET, ['page' => 1])).'" class="btn btn-outline">1</a>';
+                                            if ($startPage > 2) echo '<span class="btn btn-outline" style="pointer-events: none;">...</span>';
+                                        }
+                                        
+                                        for ($i = $startPage; $i <= $endPage; $i++): ?>
+                                            <a href="?<?= http_build_query(array_merge($_GET, ['page' => $i])) ?>" class="btn <?= $i == $page ? 'btn-primary' : 'btn-outline' ?>">
+                                                <?= $i ?>
+                                            </a>
+                                        <?php endfor;
+                                        
+                                        if ($endPage < $totalPages) {
+                                            if ($endPage < $totalPages - 1) echo '<span class="btn btn-outline" style="pointer-events: none;">...</span>';
+                                            echo '<a href="?'.http_build_query(array_merge($_GET, ['page' => $totalPages])).'" class="btn btn-outline">'.$totalPages.'</a>';
+                                        }
+                                        ?>
+                                    </div>
+                                    
+                                    <?php if ($page < $totalPages): ?>
+                                        <a href="?<?= http_build_query(array_merge($_GET, ['page' => $page + 1])) ?>" class="btn btn-outline">
+                                            Next <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
                             <?php endif; ?>
                         </div>
-                    <?php endif; ?>
-                </div>
-            </div>
+                    </div>
+                </main>
+                
+                <aside class="transfer_aside">
+                    <div class="info_card">
+                        <h3><i class="fas fa-info-circle"></i> Transaction Help</h3>
+                        <p>Filter your transactions by type, date range, amount, or search for specific transactions.</p>
+                    </div>
+                    
+                    <div class="info_card">
+                        <h3><i class="fas fa-clock"></i> Processing Times</h3>
+                        <ul class="info_list">
+                            <li>
+                                <strong>Transfers:</strong> Instant to 2 hours
+                            </li>
+                            <li>
+                                <strong>Deposits:</strong> Instant to 30 minutes
+                            </li>
+                            <li>
+                                <strong>Withdrawals:</strong> Instant
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="info_card">
+                        <h3><i class="fas fa-headset"></i> Need Help?</h3>
+                        <p>Contact our 24/7 customer support for assistance with your transactions.</p>
+                        <a href="#" class="btn btn-outline">
+                            <i class="fas fa-phone"></i> Contact Support
+                        </a>
+                    </div>
+                </aside>
+            </section>
         </section>
     </div>
 
-    <?php require_once('../includes/footer.php'); ?>
-
+    <!-- Custom JS -->
+    <script src="../js/main.js"></script>
     <script>
         // Mobile sidebar toggle
         document.getElementById('menu_btn').addEventListener('click', function() {
@@ -483,16 +456,6 @@ $types = mysqli_query($con, "SELECT * FROM transaction_types ORDER BY name");
 
         document.getElementById('btn_close').addEventListener('click', function() {
             document.getElementById('sidebar').classList.remove('show_sidebar');
-        });
-
-        // Export functionality
-        document.querySelector('.btn-export').addEventListener('click', function() {
-            // Get current filters
-            const params = new URLSearchParams(window.location.search);
-            params.set('export', '1');
-            
-            // Redirect to export endpoint
-            window.location.href = 'export_history.php?' + params.toString();
         });
     </script>
 </body>

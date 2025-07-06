@@ -1,6 +1,5 @@
 <?php
 require_once('../includes/auth.php');
-// require_once('../includes/header.php');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['confirm'])) {
     // First step: Validate and show confirmation
@@ -83,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['confirm'])) {
     <link rel="stylesheet" href="transfer.css">
 </head>
 
-<body class="light">
+<body>
     <div class="container">
         <nav class="sidebar" id="sidebar">
             <button id="btn_close">
@@ -94,12 +93,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['confirm'])) {
             </button>
 
             <div class="logo">
-                <img src="../../gccb_logos/logo-transparent.svg" alt="">
-                <!-- <span>Gold Coast Central Bank</span> -->
+                <img src="../../gccb_logos/logo-transparent.svg" alt="Gold Coast Central Bank">
             </div>
 
             <div class="nav_links">
-                <a href="../dashboard/" class="nav_link active" aria-label="overview">
+                <a href="../dashboard/" class="nav_link" aria-label="overview">
                     <div class="nav_link_icon">
                         <i class="fas fa-home"></i>
                     </div>
@@ -120,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['confirm'])) {
                     <div class="nav_link_text">Withdraw</div>
                 </a>
 
-                <a href="../transactions/transfer.php" class="nav_link" aria-label="transfer">
+                <a href="../transactions/transfer.php" class="nav_link active" aria-label="transfer">
                     <div class="nav_link_icon">
                         <i class="fas fa-exchange-alt"></i>
                     </div>
@@ -134,13 +132,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['confirm'])) {
                     <div class="nav_link_text">History</div>
                 </a>
 
-                <a href="../profile/view.php" class="nav_link" aria-label="profile">
-                    <div class="nav_link_icon">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <div class="nav_link_text">Profile</div>
-                </a>
-
                 <a href="../settings/password.php" class="nav_link" aria-label="settings">
                     <div class="nav_link_icon">
                         <i class="fas fa-lock"></i>
@@ -151,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['confirm'])) {
 
             <div class="profile">
                 <div class="img_with_name">
-                    <img src="images/profile_pic3.webp" alt="">
+                    <img src="../images/default-profile.png" alt="Profile Picture">
                     <div class="profile_text">
                         <p class="name"><?= htmlspecialchars($_SESSION['client_name']) ?></p>
                         <p class="occupation"><?= htmlspecialchars($accountInfo['account_type'] ?? 'Account') ?></p>
@@ -163,9 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['confirm'])) {
             </div>
         </nav>
 
-
-
-                  <section class="main_content">
+        <section class="main_content">
             <div class="topbar">
                 <button id="menu_btn">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16">
@@ -173,143 +162,134 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['confirm'])) {
                         <path d="M3 4h18v2H3V4zm0 7h12v2H3v-2zm0 7h18v2H3v-2z" /></svg>
                 </button>
                 <div class="overview_text">
-                    <p class="title">Transfer Funds</p>
-                    <p class="desc">Send money to other accounts</p>
+                    <h1>Transfer Funds</h1>
+                    <p class="welcome">Send money securely to other accounts</p>
                 </div>
 
                 <div class="topbar_icons">
-                    <a href="#" aria-label="search" class="topbar_icon">
-                        <i class="fas fa-search"></i>
-                    </a>
                     <a href="#" aria-label="notifications" class="topbar_icon alert">
                         <i class="fas fa-bell"></i>
                     </a>
                 </div>
             </div>
 
-            <div class="transfer-container">
-                <div class="transfer-row">
-                    <div class="transfer-main">
-                        <div class="transfer-card">
-                            <?php if (isset($_SESSION['error'])): ?>
-                                <div class="alert alert-danger"><?= $_SESSION['error'] ?></div>
-                                <?php unset($_SESSION['error']); ?>
-                            <?php endif; ?>
-
-
-                                <div class="transfer-type">
-                                <div class="transfer-type-icon">
-                                    <i class="fas fa-exchange-alt"></i>
-                                </div>
-                                <div>
-                                    <h3>New Transfer</h3>
-                                    <p>Send money to accounts and mobile wallets</p>
-                                </div>
+            <section class="transfer_section">
+                <main class="transfer_main">
+                    <div class="transfer_card">
+                        <?php if (isset($_SESSION['error'])): ?>
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-circle"></i> <?= $_SESSION['error'] ?>
                             </div>
-                            
-                            <form method="POST" id="transferForm" class="transfer-form">
-                                <div class="form-group">
-                                    <label for="type" class="form-label">Transfer Type</label>
-                                    <select class="form-control" id="type" name="type" required onchange="onTypeChange()">
-                                        <option value="">-- Select Transfer Type --</option>
-                                        <option value="internal">Internal (Same Bank)</option>
-                                        <option value="domestic">Domestic (Other Bank Ghana)</option>
-                                        <option value="international">International</option>
-                                        <option value="mobile_money">Mobile Money</option>
-                                    </select>
-                                </div>
-                                
-                                <div id="dynamicFields"></div>
-                                
-                                <div class="form-group">
-                                    <label for="amount" class="form-label">Amount (GHC)</label>
-                                    <input type="number" class="form-control" id="amount" name="amount" 
-                                           min="100" max="100000" step="100" required>
-                                    <small class="text-muted">Available: GHC<?= number_format($_SESSION['client_balance'], 2) ?></small>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="description" class="form-label">Description</label>
-                                    <textarea class="form-control" id="description" name="description" rows="2"></textarea>
-                                </div>
-                                
-                                <button type="submit" class="btn-transfer">Continue</button>
-                            </form>
-                        </div>
-                    </div>
-                    
-                    <!-- <div class="transfer-sidebar">
-                        <div class="transfer-rules">
-                            <h5>Transfer Rules</h5>
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item">Minimum: GHC100</li>
-                                <li class="list-group-item">Maximum: GHC100,000 per transfer</li>
-                                <li class="list-group-item">Daily limit: GHC500,000</li>
-                                <li class="list-group-item">Processing: Instant</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div> -->
+                            <?php unset($_SESSION['error']); ?>
+                        <?php endif; ?>
 
-
-
-
-
-                           <div class="transfer-sidebar">
-                        <div class="transfer-rules">
-                            <h5><i class="fas fa-info-circle"></i> Transfer Information</h5>
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item">
-                                    <i class="fas fa-check-circle text-success"></i> Minimum: GHC100
-                                </li>
-                                <li class="list-group-item">
-                                    <i class="fas fa-check-circle text-success"></i> Maximum: GHC100,000 per transfer
-                                </li>
-                                <li class="list-group-item">
-                                    <i class="fas fa-check-circle text-success"></i> Daily limit: GHC500,000
-                                </li>
-                                <li class="list-group-item">
-                                    <i class="fas fa-bolt text-warning"></i> Processing: Instant
-                                </li>
-                                <li class="list-group-item">
-                                    <i class="fas fa-shield-alt text-primary"></i> Secured with SSL Encryption
-                                </li>
-                            </ul>
+                        <div class="transfer_header">
+                            <div class="transfer_icon">
+                                <i class="fas fa-exchange-alt"></i>
+                            </div>
+                            <div>
+                                <h2>New Transfer</h2>
+                                <p>Send money to accounts and mobile wallets</p>
+                            </div>
                         </div>
                         
-                        <div class="transfer-rules mt-4">
-                            <h5><i class="fas fa-clock"></i> Processing Times</h5>
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item">
-                                    <strong>Internal:</strong> Instant
-                                </li>
-                                <li class="list-group-item">
-                                    <strong>Domestic:</strong> Within 1 hour
-                                </li>
-                                <li class="list-group-item">
-                                    <strong>International:</strong> 1-3 business days
-                                </li>
-                                <li class="list-group-item">
-                                    <strong>Mobile Money:</strong> Instant to 30 mins
-                                </li>
-                            </ul>
-                        </div>
+                        <form method="POST" id="transferForm" class="transfer_form">
+                            <div class="form_group">
+                                <label for="type">Transfer Type</label>
+                                <select id="type" name="type" required onchange="onTypeChange()">
+                                    <option value="">-- Select Transfer Type --</option>
+                                    <option value="internal">Internal (Same Bank)</option>
+                                    <option value="domestic">Domestic (Other Bank Ghana)</option>
+                                    <option value="international">International</option>
+                                    <option value="mobile_money">Mobile Money</option>
+                                </select>
+                            </div>
+                            
+                            <div id="dynamicFields"></div>
+                            
+                            <div class="form_group">
+                                <label for="amount">Amount (GHC)</label>
+                                <input type="number" id="amount" name="amount" 
+                                       min="100" max="100000" step="100" required>
+                                <small class="text_hint">Available: GHC<?= number_format($_SESSION['client_balance'], 2) ?></small>
+                            </div>
+                            
+                            <div class="form_group">
+                                <label for="description">Description</label>
+                                <textarea id="description" name="description" rows="2"></textarea>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-arrow-right"></i> Continue
+                            </button>
+                        </form>
                     </div>
-            </div>
+                </main>
+                
+                <aside class="transfer_aside">
+                    <div class="info_card">
+                        <h3><i class="fas fa-info-circle"></i> Transfer Information</h3>
+                        <ul class="info_list">
+                            <li>
+                                <i class="fas fa-check-circle success"></i> Minimum: GHC100
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle success"></i> Maximum: GHC100,000 per transfer
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle success"></i> Daily limit: GHC500,000
+                            </li>
+                            <li>
+                                <i class="fas fa-bolt warning"></i> Processing: Instant
+                            </li>
+                            <li>
+                                <i class="fas fa-shield-alt primary"></i> Secured with SSL Encryption
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="info_card">
+                        <h3><i class="fas fa-clock"></i> Processing Times</h3>
+                        <ul class="info_list">
+                            <li>
+                                <strong>Internal:</strong> Instant
+                            </li>
+                            <li>
+                                <strong>Domestic:</strong> Within 1 hour
+                            </li>
+                            <li>
+                                <strong>International:</strong> 1-3 business days
+                            </li>
+                            <li>
+                                <strong>Mobile Money:</strong> Instant to 30 mins
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="info_card">
+                        <h3><i class="fas fa-headset"></i> Need Help?</h3>
+                        <p>Contact our 24/7 customer support for assistance with your transfers.</p>
+                        <a href="#" class="btn btn-outline">
+                            <i class="fas fa-phone"></i> Contact Support
+                        </a>
+                    </div>
+                </aside>
+            </section>
         </section>
-
-
-
-
-        
     </div>
-
-    <!-- Swiper JS -->
-    <script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
 
     <!-- Custom JS -->
     <script src="../js/main.js"></script>
     <script>
+    // Mobile sidebar toggle
+    document.getElementById('menu_btn').addEventListener('click', function() {
+        document.getElementById('sidebar').classList.toggle('show_sidebar');
+    });
+
+    document.getElementById('btn_close').addEventListener('click', function() {
+        document.getElementById('sidebar').classList.remove('show_sidebar');
+    });
+
     // AJAX account verification for internal transfers
     function verifyInternalAccount(account) {
         if (account.length < 5) return;
@@ -319,11 +299,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['confirm'])) {
             .then(data => {
                 const infoDiv = document.getElementById('recipientInfo');
                 if (data.error) {
-                    infoDiv.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+                    infoDiv.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> ${data.error}</div>`;
                 } else if (data.name) {
                     infoDiv.innerHTML = `
                         <div class="alert alert-success">
-                            <strong>Account Verified:</strong> ${data.name}
+                            <i class="fas fa-check-circle"></i> <strong>Account Verified:</strong> ${data.name}
                         </div>`;
                     // Auto-fill the name field if it exists
                     const nameField = document.querySelector('input[name="name"]');
@@ -342,9 +322,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['confirm'])) {
 
         if (type === 'internal') {
             html = `
-                <div class="form-group">
-                    <label for="account" class="form-label">Recipient Account</label>
-                    <input type="text" class="form-control" id="account" name="account" required 
+                <div class="form_group">
+                    <label for="account">Recipient Account</label>
+                    <input type="text" id="account" name="account" required 
                         onblur="verifyInternalAccount(this.value)">
                     <div id="recipientInfo" class="mt-2"></div>
                 </div>
@@ -352,17 +332,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['confirm'])) {
         } 
         else if (type === 'domestic') {
             html = `
-                <div class="form-group">
-                    <label for="bank" class="form-label">Bank Name</label>
-                    <input type="text" class="form-control" id="bank" name="bank" required>
+                <div class="form_group">
+                    <label for="bank">Bank Name</label>
+                    <input type="text" id="bank" name="bank" required>
                 </div>
-                <div class="form-group">
-                    <label for="account" class="form-label">Recipient Account</label>
-                    <input type="text" class="form-control" id="account" name="account" required>
+                <div class="form_group">
+                    <label for="account">Recipient Account</label>
+                    <input type="text" id="account" name="account" required>
                 </div>
-                <div class="form-group">
-                    <label for="name" class="form-label">Recipient Full Name</label>
-                    <input type="text" class="form-control" id="name" name="name" required>
+                <div class="form_group">
+                    <label for="name">Recipient Full Name</label>
+                    <input type="text" id="name" name="name" required>
                 </div>`;
         }
         else if (type === 'international') {
@@ -375,52 +355,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['confirm'])) {
                 ).join('');
                 
                 html = `
-                    <div class="form-group">
-                        <label for="name" class="form-label">Recipient Full Name</label>
-                        <input type="text" class="form-control" id="name" name="name" required>
+                    <div class="form_group">
+                        <label for="name">Recipient Full Name</label>
+                        <input type="text" id="name" name="name" required>
                     </div>
-                    <div class="form-group">
-                        <label for="bank" class="form-label">Bank Name</label>
-                        <input type="text" class="form-control" id="bank" name="bank" required>
+                    <div class="form_group">
+                        <label for="bank">Bank Name</label>
+                        <input type="text" id="bank" name="bank" required>
                     </div>
-                    <div class="form-group">
-                        <label for="account" class="form-label">Account/IBAN</label>
-                        <input type="text" class="form-control" id="account" name="account" required>
+                    <div class="form_group">
+                        <label for="account">Account/IBAN</label>
+                        <input type="text" id="account" name="account" required>
                     </div>
-                    <div class="form-group">
-                        <label for="swift" class="form-label">SWIFT/BIC Code</label>
-                        <input type="text" class="form-control" id="swift" name="swift" required>
+                    <div class="form_group">
+                        <label for="swift">SWIFT/BIC Code</label>
+                        <input type="text" id="swift" name="swift" required>
                     </div>
-                    <div class="form-group">
-                        <label for="country" class="form-label">Country</label>
-                        <select class="form-control" id="country" name="country" required>
+                    <div class="form_group">
+                        <label for="country">Country</label>
+                        <select id="country" name="country" required>
                             <option value="">-- Select Country --</option>
                             ${countryOptions}
                         </select>
                     </div>`;
             } catch (error) {
                 console.error('Failed to load countries:', error);
-                html = `<div class="alert alert-danger">Failed to load country list. Please try again.</div>`;
+                html = `<div class="alert alert-danger"><i class="fas fa-exclamation-circle"></i> Failed to load country list. Please try again.</div>`;
             }
         }
         else if (type === 'mobile_money') {
             html = `
-                <div class="form-group">
-                    <label for="network" class="form-label">Mobile Network</label>
-                    <select class="form-control" id="network" name="network" required>
+                <div class="form_group">
+                    <label for="network">Mobile Network</label>
+                    <select id="network" name="network" required>
                         <option value="">-- Select Network --</option>
                         <option value="MTN">MTN</option>
                         <option value="Vodafone">Vodafone</option>
                         <option value="AirtelTigo">AirtelTigo</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="account" class="form-label">Mobile Money Number</label>
-                    <input type="text" class="form-control" id="account" name="account" required>
+                <div class="form_group">
+                    <label for="account">Mobile Money Number</label>
+                    <input type="text" id="account" name="account" required>
                 </div>
-                <div class="form-group">
-                    <label for="name" class="form-label">Recipient Name</label>
-                    <input type="text" class="form-control" id="name" name="name" required>
+                <div class="form_group">
+                    <label for="name">Recipient Name</label>
+                    <input type="text" id="name" name="name" required>
                 </div>`;
         }
         

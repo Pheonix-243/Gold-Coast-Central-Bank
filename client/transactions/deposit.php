@@ -1,6 +1,5 @@
 <?php
 require_once('../includes/auth.php');
-// require_once('../includes/header.php');
 require_once('../classes/TransactionProcessor.php');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -43,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="deposit.css">
 </head>
 
-<body class="light">
+<body>
     <div class="container">
         <nav class="sidebar" id="sidebar">
             <button id="btn_close">
@@ -54,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </button>
 
             <div class="logo">
-                <img src="../../gccb_logos/logo-transparent.svg" alt="">
+                <img src="../../gccb_logos/logo-transparent.svg" alt="Gold Coast Central Bank">
             </div>
 
             <div class="nav_links">
@@ -93,13 +92,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="nav_link_text">History</div>
                 </a>
 
-                <a href="../profile/view.php" class="nav_link" aria-label="profile">
-                    <div class="nav_link_icon">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <div class="nav_link_text">Profile</div>
-                </a>
-
                 <a href="../settings/password.php" class="nav_link" aria-label="settings">
                     <div class="nav_link_icon">
                         <i class="fas fa-lock"></i>
@@ -110,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <div class="profile">
                 <div class="img_with_name">
-                    <img src="../images/profile_pic3.webp" alt="">
+                    <img src="../images/default-profile.png" alt="Profile Picture">
                     <div class="profile_text">
                         <p class="name"><?= htmlspecialchars($_SESSION['client_name']) ?></p>
                         <p class="occupation"><?= htmlspecialchars($_SESSION['client_account_type'] ?? 'Account') ?></p>
@@ -130,139 +122,169 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <path d="M3 4h18v2H3V4zm0 7h12v2H3v-2zm0 7h18v2H3v-2z" /></svg>
                 </button>
                 <div class="overview_text">
-                    <p class="title">Deposit Funds</p>
-                    <p class="desc">Add money to your account</p>
+                    <h1>Deposit Funds</h1>
+                    <p class="welcome">Add money to your account securely</p>
                 </div>
 
                 <div class="topbar_icons">
-                    <a href="#" aria-label="search" class="topbar_icon">
-                        <i class="fas fa-search"></i>
-                    </a>
                     <a href="#" aria-label="notifications" class="topbar_icon alert">
                         <i class="fas fa-bell"></i>
                     </a>
                 </div>
             </div>
 
-            <div class="deposit-container">
-                <div class="deposit-header">
-                    <!-- <h1>Deposit Funds</h1> -->
-                    <p class="subtitle">Quickly add money to your account using our secure payment methods</p>
-                </div>
-                
-                <div class="deposit-row">
-                    <div class="deposit-main">
-                        <div class="deposit-card">
-                            <?php if (isset($_SESSION['error'])): ?>
-                                <div class="alert alert-danger"><?= $_SESSION['error'] ?></div>
-                                <?php unset($_SESSION['error']); ?>
-                            <?php endif; ?>
-                            
-                            <form method="POST" id="depositForm" class="deposit-form">
-                                <div class="form-group">
-                                    <label for="amount" class="form-label">Amount (GHC)</label>
-                                    <input type="number" class="form-control" id="amount" name="amount" 
-                                           min="1" step="0.01" required>
-                                    <small class="text-muted">Minimum deposit: GHC10</small>
-                                </div>
-                                
-                                <div class="payment-methods">
-                                    <h3>Payment Methods</h3>
-                                    <div class="method-grid">
-                                        <div class="method-card active">
-                                            <i class="fab fa-cc-mastercard"></i>
-                                            <span>Card Payment</span>
-                                        </div>
-                                        <div class="method-card">
-                                            <i class="fas fa-mobile-alt"></i>
-                                            <span>Mobile Money</span>
-                                        </div>
-                                        <div class="method-card">
-                                            <i class="fas fa-university"></i>
-                                            <span>Bank Transfer</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <button type="submit" class="btn-deposit">
-                                    <i class="fas fa-lock"></i> Secure Payment
-                                </button>
-                            </form>
+            <section class="deposit_section">
+                <main class="deposit_main">
+                    <div class="deposit_card">
+                        <?php if (isset($_SESSION['error'])): ?>
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-circle"></i> <?= $_SESSION['error'] ?>
+                            </div>
+                            <?php unset($_SESSION['error']); ?>
+                        <?php endif; ?>
+                        
+                        <div class="deposit_header">
+                            <div class="deposit_icon">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </div>
+                            <div>
+                                <h2>Make a Deposit</h2>
+                                <p>Fund your account using our secure payment methods</p>
+                            </div>
                         </div>
                         
-                        <div class="security-info">
-                            <div class="security-item">
-                                <i class="fas fa-shield-alt"></i>
-                                <div>
-                                    <h4>Bank-Level Security</h4>
-                                    <p>256-bit encryption protects your transactions</p>
+                        <form method="POST" id="depositForm" class="deposit_form">
+                            <div class="form_group">
+                                <label for="amount">Amount (GHC)</label>
+                                <div class="input_with_icon">
+                                    <i class="fas fa-ghost"></i>
+                                    <input type="number" id="amount" name="amount" 
+                                           min="10" step="0.01" required
+                                           placeholder="Enter amount">
+                                </div>
+                                <small class="text_hint">Minimum deposit: GHC10</small>
+                            </div>
+                            
+                            <div class="payment_methods">
+                                <h3>Select Payment Method</h3>
+                                <div class="method_grid">
+                                    <div class="method_card active">
+                                        <div class="method_icon">
+                                            <i class="fab fa-cc-mastercard"></i>
+                                        </div>
+                                        <span>Card Payment</span>
+                                    </div>
+                                    <div class="method_card">
+                                        <div class="method_icon">
+                                            <i class="fas fa-mobile-alt"></i>
+                                        </div>
+                                        <span>Mobile Money</span>
+                                    </div>
+                                    <div class="method_card">
+                                        <div class="method_icon">
+                                            <i class="fas fa-university"></i>
+                                        </div>
+                                        <span>Bank Transfer</span>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="security-item">
-                                <i class="fas fa-clock"></i>
-                                <div>
-                                    <h4>Instant Processing</h4>
-                                    <p>Funds available immediately after deposit</p>
-                                </div>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-lock"></i> Proceed to Secure Payment
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <div class="security_features">
+                        <div class="security_item">
+                            <div class="security_icon">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div class="security_details">
+                                <h4>Bank-Level Security</h4>
+                                <p>256-bit encryption protects all transactions</p>
+                            </div>
+                        </div>
+                        <div class="security_item">
+                            <div class="security_icon">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <div class="security_details">
+                                <h4>Instant Processing</h4>
+                                <p>Funds available immediately after deposit</p>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+                
+                <aside class="deposit_aside">
+                    <div class="account_summary">
+                        <h3><i class="fas fa-user-circle"></i> Account Summary</h3>
+                        <div class="summary_item">
+                            <div class="summary_icon">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="summary_details">
+                                <p class="summary_label">Account Holder</p>
+                                <p class="summary_value"><?= htmlspecialchars($_SESSION['client_name']) ?></p>
+                            </div>
+                        </div>
+                        <div class="summary_item">
+                            <div class="summary_icon">
+                                <i class="fas fa-id-card"></i>
+                            </div>
+                            <div class="summary_details">
+                                <p class="summary_label">Account Number</p>
+                                <p class="summary_value"><?= htmlspecialchars($_SESSION['client_account']) ?></p>
+                            </div>
+                        </div>
+                        <div class="summary_item">
+                            <div class="summary_icon">
+                                <i class="fas fa-wallet"></i>
+                            </div>
+                            <div class="summary_details">
+                                <p class="summary_label">Current Balance</p>
+                                <p class="summary_value">GHC<?= number_format($_SESSION['client_balance'], 2) ?></p>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="deposit-sidebar">
-                        <div class="account-summary">
-                            <h3>Account Summary</h3>
-                            <div class="summary-item">
-                                <i class="fas fa-user"></i>
-                                <div>
-                                    <p class="label">Account Holder</p>
-                                    <p class="value"><?= htmlspecialchars($_SESSION['client_name']) ?></p>
-                                </div>
-                            </div>
-                            <div class="summary-item">
-                                <i class="fas fa-id-card"></i>
-                                <div>
-                                    <p class="label">Account Number</p>
-                                    <p class="value"><?= htmlspecialchars($_SESSION['client_account']) ?></p>
-                                </div>
-                            </div>
-                            <div class="summary-item">
-                                <i class="fas fa-wallet"></i>
-                                <div>
-                                    <p class="label">Current Balance</p>
-                                    <p class="value">GHC<?= number_format($_SESSION['client_balance'], 2) ?></p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="deposit-limits">
-                            <h3>Deposit Limits</h3>
-                            <ul class="limits-list">
-                                <li>
-                                    <i class="fas fa-check-circle"></i>
-                                    <span>Minimum: GHC10</span>
-                                </li>
-                                <li>
-                                    <i class="fas fa-check-circle"></i>
-                                    <span>Maximum per transaction: GHC50,000</span>
-                                </li>
-                                <li>
-                                    <i class="fas fa-check-circle"></i>
-                                    <span>Daily limit: GHC200,000</span>
-                                </li>
-                                <li>
-                                    <i class="fas fa-check-circle"></i>
-                                    <span>No fees for deposits</span>
-                                </li>
-                            </ul>
-                        </div>
+                    <div class="deposit_info">
+                        <h3><i class="fas fa-info-circle"></i> Deposit Information</h3>
+                        <ul class="info_list">
+                            <li>
+                                <i class="fas fa-check-circle success"></i>
+                                <span>Minimum: GHC10</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle success"></i>
+                                <span>Maximum per transaction: GHC50,000</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle success"></i>
+                                <span>Daily limit: GHC200,000</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle success"></i>
+                                <span>No fees for deposits</span>
+                            </li>
+                        </ul>
                     </div>
-                </div>
-            </div>
+                    
+                    <div class="help_card">
+                        <h3><i class="fas fa-headset"></i> Need Help?</h3>
+                        <p>Our customer support team is available 24/7 to assist with your deposits.</p>
+                        <a href="#" class="btn btn-outline">
+                            <i class="fas fa-phone"></i> Contact Support
+                        </a>
+                    </div>
+                </aside>
+            </section>
         </section>
     </div>
 
-    <?php require_once('../includes/footer.php'); ?>
-
+    <!-- Custom JS -->
+    <script src="../js/main.js"></script>
     <script>
         // Mobile sidebar toggle
         document.getElementById('menu_btn').addEventListener('click', function() {
@@ -274,12 +296,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         });
 
         // Payment method selection
-        const methodCards = document.querySelectorAll('.method-card');
+        const methodCards = document.querySelectorAll('.method_card');
         methodCards.forEach(card => {
             card.addEventListener('click', () => {
                 methodCards.forEach(c => c.classList.remove('active'));
                 card.classList.add('active');
             });
+        });
+
+        // Format amount input
+        const amountInput = document.getElementById('amount');
+        amountInput.addEventListener('blur', function() {
+            if (this.value) {
+                this.value = parseFloat(this.value).toFixed(2);
+            }
         });
     </script>
 </body>

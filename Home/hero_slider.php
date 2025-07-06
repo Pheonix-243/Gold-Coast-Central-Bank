@@ -403,240 +403,177 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const sliderTrack = document.querySelector('.slider-track');
-        const slides = document.querySelectorAll('.slide');
-        const dots = document.querySelectorAll('.dot');
-        const leftArrow = document.querySelector('.slider-arrow.left');
-        const rightArrow = document.querySelector('.slider-arrow.right');
-        let currentIndex = 0;
-        const slideCount = slides.length - 1; // Exclude clone
-        let isTransitioning = false;
-        let autoSlideInterval;
-        let isTabActive = true;
-        const slideDuration = 8000; // Auto-slide duration
-        
-        // Optimized animation timing
-        const easeInOut = 'cubic-bezier(0.16, 0.77, 0.22, 0.99)';
-        const transitionDuration = 1800; // Transition duration
-        
-        // Force GPU acceleration for smoother animations
-        function forceHardwareAcceleration(element) {
-            element.style.transform = 'translateZ(0)';
-            element.style.backfaceVisibility = 'hidden';
-            element.style.perspective = '1000px';
+document.addEventListener('DOMContentLoaded', function() {
+    const sliderTrack = document.querySelector('.slider-track');
+    const slides = document.querySelectorAll('.slide');
+    const dots = document.querySelectorAll('.dot');
+    const leftArrow = document.querySelector('.slider-arrow.left');
+    const rightArrow = document.querySelector('.slider-arrow.right');
+    let currentIndex = 0;
+    const slideCount = slides.length - 1; // Exclude clone
+    let isTransitioning = false;
+    let autoSlideInterval;
+    let isTabActive = true;
+    const slideDuration = 8000;
+    const easeInOut = 'cubic-bezier(0.16, 0.77, 0.22, 0.99)';
+    const transitionDuration = 1800;
+
+    // Simple: set all background images at once
+    slides.forEach(slide => {
+        const src = slide.getAttribute('data-src');
+        if (src) {
+            slide.style.backgroundImage = `url('${src}')`;
+            slide.classList.add('loaded');
         }
-        
-        // Lazy load images with Intersection Observer
-        function lazyLoadImages() {
-            const isMobile = window.innerWidth <= 768;
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const slide = entry.target;
-                        const src = slide.getAttribute('data-src');
-                        
-                        if (src && !slide.classList.contains('loaded')) {
-                            // Create image object to preload
-                            const img = new Image();
-                            img.src = src;
-                            img.onload = () => {
-                                slide.style.backgroundImage = `url('${src}')`;
-                                slide.classList.add('loaded');
-                                
-                                // Force GPU acceleration
-                                forceHardwareAcceleration(slide);
-                                
-                                // Remove observer after loading
-                                observer.unobserve(slide);
-                            };
-                            img.onerror = () => {
-                                console.error('Error loading image:', src);
-                                // Fallback to placeholder or default color
-                            };
-                        }
-                    }
-                });
-            }, {
-                rootMargin: isMobile ? '100px' : '300px',
-                threshold: 0.01
-            });
-
-            // Observe all slides
-            slides.forEach(slide => {
-                observer.observe(slide);
-            });
-            
-            // Manually load the first slide immediately
-            const firstSlide = slides[0];
-            const firstSrc = firstSlide.getAttribute('data-src');
-            if (firstSrc) {
-                firstSlide.style.backgroundImage = `url('${firstSrc}')`;
-                firstSlide.classList.add('loaded');
-                observer.unobserve(firstSlide);
-            }
-        }
-
-        // Parallax effect
-        function parallax() {
-            const activeSlide = slides[currentIndex];
-            if (!activeSlide) return;
-            window.requestAnimationFrame(() => {
-                const y = window.scrollY || window.pageYOffset;
-                activeSlide.style.backgroundPosition = `center ${50 + y * 0.08}%`;
-            });
-        }
-        window.addEventListener('scroll', parallax, { passive: true });
-
-        // Keyboard navigation
-        document.addEventListener('keydown', e => {
-            if (e.key === 'ArrowLeft') prevSlide();
-            if (e.key === 'ArrowRight') nextSlide();
-        });
-
-        // Touch swipe support
-        let startX = 0, endX = 0;
-        sliderTrack.addEventListener('touchstart', e => {
-            startX = e.touches[0].clientX;
-            pauseSlider();
-        }, { passive: true });
-        
-        sliderTrack.addEventListener('touchmove', e => {
-            endX = e.touches[0].clientX;
-            e.preventDefault(); // Prevent scrolling when swiping
-        }, { passive: false });
-        
-        sliderTrack.addEventListener('touchend', () => {
-            if (startX - endX > 60) nextSlide();
-            if (endX - startX > 60) prevSlide();
-            resumeSlider();
-        }, { passive: true });
-
-        // Initialize slider
-        function initSlider() {
-            lazyLoadImages();
-            startAutoSlide();
-            document.addEventListener('visibilitychange', handleVisibilityChange);
-            dots.forEach(dot => {
-                dot.addEventListener('click', function() {
-                    const targetIndex = parseInt(this.getAttribute('data-index'));
-                    if (targetIndex !== currentIndex) goToSlide(targetIndex);
-                });
-            });
-            document.querySelector('.hero-slider').addEventListener('mouseenter', pauseSlider);
-            document.querySelector('.hero-slider').addEventListener('mouseleave', resumeSlider);
-            leftArrow.addEventListener('click', prevSlide);
-            rightArrow.addEventListener('click', nextSlide);
-            
-            // Pre-load transitions
-            setTimeout(() => {
-                sliderTrack.style.transition = `transform ${transitionDuration}ms ${easeInOut}`;
-            }, 50);
-        }
-
-        function handleVisibilityChange() {
-            if (document.hidden) {
-                isTabActive = false;
-                pauseSlider();
-            } else {
-                isTabActive = true;
-                clearInterval(autoSlideInterval);
-                startAutoSlide();
-            }
-        }
-
-        function goToSlide(index) {
-            if (isTransitioning) return;
-            isTransitioning = true;
-            
-            // Update UI immediately for instant feedback
-            currentIndex = index;
-            updateDots();
-            updateActiveSlide();
-            
-            // Prepare for smooth transition
-            const transformValue = -currentIndex * 100;
-            sliderTrack.style.transition = `transform ${transitionDuration}ms ${easeInOut}`;
-            sliderTrack.style.transform = `translateX(${transformValue}%)`;
-            
-            // Handle infinite loop seamlessly
-            if (currentIndex === slideCount) {
-                setTimeout(() => {
-                    sliderTrack.style.transition = 'none';
-                    currentIndex = 0;
-                    sliderTrack.style.transform = 'translateX(0)';
-                    // Force reflow without layout thrashing
-                    requestAnimationFrame(() => {
-                        updateDots();
-                        updateActiveSlide();
-                        isTransitioning = false;
-                    });
-                }, transitionDuration);
-            } else {
-                setTimeout(() => { 
-                    isTransitioning = false; 
-                }, transitionDuration + 100); // Extra buffer
-            }
-        }
-
-        function nextSlide() {
-            if (isTransitioning) return;
-            goToSlide((currentIndex + 1) % (slideCount + 1));
-        }
-
-        function prevSlide() {
-            if (isTransitioning) return;
-            
-            if (currentIndex === 0) {
-                // Prepare for infinite loop
-                sliderTrack.style.transition = 'none';
-                currentIndex = slideCount;
-                sliderTrack.style.transform = `translateX(${-currentIndex * 100}%)`;
-                
-                // Force reflow before next transition
-                requestAnimationFrame(() => {
-                    goToSlide(slideCount - 1);
-                });
-            } else {
-                goToSlide(currentIndex - 1);
-            }
-        }
-
-        function updateActiveSlide() {
-            slides.forEach((slide, index) => {
-                slide.classList.remove('active');
-                if (index === currentIndex || (currentIndex === slideCount && index === 0)) {
-                    slide.classList.add('active');
-                }
-            });
-        }
-
-        function updateDots() {
-            dots.forEach(dot => {
-                dot.classList.remove('active');
-                if (parseInt(dot.getAttribute('data-index')) === currentIndex % (slideCount)) {
-                    dot.classList.add('active');
-                }
-            });
-        }
-
-        function startAutoSlide() {
-            clearInterval(autoSlideInterval);
-            autoSlideInterval = setInterval(() => {
-                if (isTabActive && !isTransitioning) nextSlide();
-            }, slideDuration);
-        }
-
-        function pauseSlider() { 
-            clearInterval(autoSlideInterval); 
-        }
-
-        function resumeSlider() { 
-            if (isTabActive) startAutoSlide(); 
-        }
-
-        initSlider();
     });
+
+    // Parallax effect
+    function parallax() {
+        const activeSlide = slides[currentIndex];
+        if (!activeSlide) return;
+        window.requestAnimationFrame(() => {
+            const y = window.scrollY || window.pageYOffset;
+            activeSlide.style.backgroundPosition = `center ${50 + y * 0.08}%`;
+        });
+    }
+    window.addEventListener('scroll', parallax, { passive: true });
+
+    // Keyboard navigation
+    document.addEventListener('keydown', e => {
+        if (e.key === 'ArrowLeft') prevSlide();
+        if (e.key === 'ArrowRight') nextSlide();
+    });
+
+    // Touch swipe support
+    let startX = 0, endX = 0;
+    sliderTrack.addEventListener('touchstart', e => {
+        startX = e.touches[0].clientX;
+        pauseSlider();
+    }, { passive: true });
+
+    sliderTrack.addEventListener('touchmove', e => {
+        endX = e.touches[0].clientX;
+        e.preventDefault();
+    }, { passive: false });
+
+    sliderTrack.addEventListener('touchend', () => {
+        if (startX - endX > 60) nextSlide();
+        if (endX - startX > 60) prevSlide();
+        resumeSlider();
+    }, { passive: true });
+
+    function initSlider() {
+        startAutoSlide();
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        dots.forEach(dot => {
+            dot.addEventListener('click', function() {
+                const targetIndex = parseInt(this.getAttribute('data-index'));
+                if (targetIndex !== currentIndex) goToSlide(targetIndex);
+            });
+        });
+        document.querySelector('.hero-slider').addEventListener('mouseenter', pauseSlider);
+        document.querySelector('.hero-slider').addEventListener('mouseleave', resumeSlider);
+        leftArrow.addEventListener('click', prevSlide);
+        rightArrow.addEventListener('click', nextSlide);
+
+        setTimeout(() => {
+            sliderTrack.style.transition = `transform ${transitionDuration}ms ${easeInOut}`;
+        }, 50);
+    }
+
+    function handleVisibilityChange() {
+        if (document.hidden) {
+            isTabActive = false;
+            pauseSlider();
+        } else {
+            isTabActive = true;
+            clearInterval(autoSlideInterval);
+            startAutoSlide();
+        }
+    }
+
+    function goToSlide(index) {
+        if (isTransitioning) return;
+        isTransitioning = true;
+        currentIndex = index;
+        updateDots();
+        updateActiveSlide();
+        const transformValue = -currentIndex * 100;
+        sliderTrack.style.transition = `transform ${transitionDuration}ms ${easeInOut}`;
+        sliderTrack.style.transform = `translateX(${transformValue}%)`;
+        if (currentIndex === slideCount) {
+            setTimeout(() => {
+                sliderTrack.style.transition = 'none';
+                currentIndex = 0;
+                sliderTrack.style.transform = 'translateX(0)';
+                requestAnimationFrame(() => {
+                    updateDots();
+                    updateActiveSlide();
+                    isTransitioning = false;
+                });
+            }, transitionDuration);
+        } else {
+            setTimeout(() => { 
+                isTransitioning = false; 
+            }, transitionDuration + 100);
+        }
+    }
+
+    function nextSlide() {
+        if (isTransitioning) return;
+        goToSlide((currentIndex + 1) % (slideCount + 1));
+    }
+
+    function prevSlide() {
+        if (isTransitioning) return;
+        if (currentIndex === 0) {
+            sliderTrack.style.transition = 'none';
+            currentIndex = slideCount;
+            sliderTrack.style.transform = `translateX(${-currentIndex * 100}%)`;
+            requestAnimationFrame(() => {
+                goToSlide(slideCount - 1);
+            });
+        } else {
+            goToSlide(currentIndex - 1);
+        }
+    }
+
+    function updateActiveSlide() {
+        slides.forEach((slide, index) => {
+            slide.classList.remove('active');
+            if (index === currentIndex || (currentIndex === slideCount && index === 0)) {
+                slide.classList.add('active');
+            }
+        });
+    }
+
+    function updateDots() {
+        dots.forEach(dot => {
+            dot.classList.remove('active');
+            if (parseInt(dot.getAttribute('data-index')) === currentIndex % (slideCount)) {
+                dot.classList.add('active');
+            }
+        });
+    }
+
+    function startAutoSlide() {
+        clearInterval(autoSlideInterval);
+        autoSlideInterval = setInterval(() => {
+            if (isTabActive && !isTransitioning) nextSlide();
+        }, slideDuration);
+    }
+
+    function pauseSlider() { 
+        clearInterval(autoSlideInterval); 
+    }
+
+    function resumeSlider() { 
+        if (isTabActive) startAutoSlide(); 
+    }
+
+    initSlider();
+});
 </script>
+
 </body>
 </html>
