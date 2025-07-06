@@ -8,187 +8,118 @@ include 'includes/header.php';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title><?= htmlspecialchars($page_title) ?></title>
+    
     <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      font-family: sans-serif;
-      overflow-x: hidden;
-    }
-    .hero-slider {
-      position: relative;
-      width: 100vw;
-      height: 90vh;
-      overflow: hidden;
-      margin-top: -7px;
-    }
-    .slider-track {
-      display: flex;
-      width: 100%;
-      height: 100%;
-      transition: transform 1s ease-in-out;
-    }
-    .slide {
-      min-width: 100vw;
-      height: 100%;
-      position: relative;
-      background-size: cover;
-      background-position: center;
-    }
-    .overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.4);
-    }
-    .slide-content h1 {
-      font-size: 3rem;
-      margin-bottom: 1rem;
-    }
-    .slide-content p {
-      font-size: 1.2rem;
-    }
-    .contents {
-        position: absolute; 
-        bottom: 20%;
-        left: 10%; 
-        height: 100%;
-        display: flex; 
-        align-items: center; 
-        justify-content: center;
-        animation: fadeInUp 1s forwards 0.5s;
-        transform: translateY(20px);
-    }
-    .slide-content {
-        position: absolute; 
-        bottom: 20%;
-        left: 10%; 
-        color: var(--light);
-        width: 500px;
-        background-color: rgba(0, 0, 0, 0.5);
-        padding: 2rem;
-        border-radius: 8px;
-        transform: translateY(20px);
-        opacity: 0;
-        animation: fadeInUp 1s forwards 0.5s;
-    }
-    @keyframes fadeInUp {
-        to {
-            opacity: 1; 
-            transform: translateY(0);
+        .quick-login-container {
+            position: fixed;
+            top: 80px;
+            right: 40px;
+            z-index: 1050;
+            animation: slideInQuickLogin 1s cubic-bezier(.68,-0.55,.27,1.55);
         }
-    }
-    @media (max-width: 768px) {
-        .slide-content {
-            left: 5%;
-            right: 5%;
-            max-width: none;
-            bottom: 10%;
+        @media (max-width: 991px) {
+             .quick-login-container {
+                animation: none;
+            } 
         }
-        .section {
-            padding: 3rem 0;
+        @keyframes slideInQuickLogin {
+            from { opacity: 0; transform: translateY(-40px) scale(0.95);}
+            to   { opacity: 1; transform: translateY(0) scale(1);}
         }
-    }
-    .quick-login-container {
-        position: fixed;
-        top: 80px;
-        right: 40px;
-        z-index: 1050;
-        animation: slideInQuickLogin 1s cubic-bezier(.68,-0.55,.27,1.55);
-    }
-    @media (max-width: 991px) {
-         .quick-login-container {
-            animation: none;
-        } 
-    }
-    @keyframes slideInQuickLogin {
-        from { opacity: 0; transform: translateY(-40px) scale(0.95);}
-        to   { opacity: 1; transform: translateY(0) scale(1);}
-    }
-    .quick-login {
-        border: none;
-        background: #fff;
-        box-shadow: 0 8px 32px rgba(44, 62, 80, 0.15), 0 1.5px 6px rgba(255, 215, 0, 0.10);
-        min-width: 270px;
-        max-width: 320px;
-        padding: 0.5rem 0.5rem 0.5rem 0.5rem;
-        transition: box-shadow 0.3s;
-    }
-    .quick-login:hover {
-        box-shadow: 0 12px 40px rgba(44, 62, 80, 0.22), 0 2px 8px rgba(255, 215, 0, 0.15);
-    }
-    .quick-login .card-body {
-        padding: 1.5rem 1.25rem 1.25rem 1.25rem;
-    }
-    .quick-login h6 {
-        letter-spacing: 1px;
-        font-size: 1.1rem;
-        color: #bfa100;
-        text-align: center;
-        margin-bottom: 1.2rem;
-        font-family: 'Montserrat', Arial, sans-serif;
-    }
-    .quick-login input.form-control {
-        border: 1.5px solid #ffe066;
-        background: #fff;
-        font-size: 0.97rem;
-        transition: border-color 0.2s;
-    }
-    .quick-login input.form-control:focus {
-        border-color: #bfa100;
-        box-shadow: 0 0 0 2px #ffe06655;
-    }
-    .quick-login .btn-primary {
-        background: var(--navy-blue);
-        border: none;
-        color: #fff;
-        font-weight: 700;
-        border-radius: 0.75rem;
-        box-shadow: 0 2px 8px rgba(191,161,0,0.10);
-        transition: background 0.2s, color 0.2s;
-        letter-spacing: 0.5px;
-    }
-    .quick-login .btn-primary:hover, .quick-login .btn-primary:focus {
-        background: linear-gradient(90deg, #ffd700 0%, #bfa100 100%);
-        color: #111;
-    }
-    .quick-login .quick-login-links {
-        margin-top: 0.7rem;
-        text-align: center;
-    }
-    .quick-login .quick-login-links a {
-        color: var(--navy-blue);
-        font-size: 0.92rem;
-        margin: 0 0.4rem;
-        text-decoration: none;
-        transition: color 0.2s;
-    }
-    .quick-login .quick-login-links a:hover {
-        color: #222;
-        text-decoration: underline;
-    }
-    .quick-login .quick-login-icon {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin-bottom: 0.7rem;
-    }
-    .quick-login .quick-login-icon i {
-        font-size: 2.1rem;
-        color: #ffd700;
-        filter: drop-shadow(0 2px 6px #ffe06688);
-        animation: bounceLoginIcon 1.2s infinite alternate;
-    }
-    @keyframes bounceLoginIcon {
-        from { transform: translateY(0);}
-        to   { transform: translateY(-7px);}
-    }
+        .quick-login {
+            border: none;
+            background: #fff;
+            box-shadow: 0 8px 32px rgba(44, 62, 80, 0.15), 0 1.5px 6px rgba(255, 215, 0, 0.10);
+            min-width: 270px;
+            max-width: 320px;
+            padding: 0.5rem 0.5rem 0.5rem 0.5rem;
+            transition: box-shadow 0.3s;
+        }
+        .quick-login:hover {
+            box-shadow: 0 12px 40px rgba(44, 62, 80, 0.22), 0 2px 8px rgba(255, 215, 0, 0.15);
+        }
+        .quick-login .card-body {
+            padding: 1.5rem 1.25rem 1.25rem 1.25rem;
+        }
+        .quick-login h6 {
+            letter-spacing: 1px;
+            font-size: 1.1rem;
+            color: #bfa100;
+            text-align: center;
+            margin-bottom: 1.2rem;
+            font-family: 'Montserrat', Arial, sans-serif;
+        }
+        .quick-login input.form-control {
+            border: 1.5px solid #ffe066;
+            background: #fff;
+            font-size: 0.97rem;
+            transition: border-color 0.2s;
+        }
+        .quick-login input.form-control:focus {
+            border-color: #bfa100;
+            box-shadow: 0 0 0 2px #ffe06655;
+        }
+        .quick-login .btn-primary {
+            background: var(--navy-blue);
+            border: none;
+            color: #fff;
+            font-weight: 700;
+            border-radius: 0.75rem;
+            box-shadow: 0 2px 8px rgba(191,161,0,0.10);
+            transition: background 0.2s, color 0.2s;
+            letter-spacing: 0.5px;
+        }
+        .quick-login .btn-primary:hover, .quick-login .btn-primary:focus {
+            background: linear-gradient(90deg, #ffd700 0%, #bfa100 100%);
+            color: #111;
+        }
+        .quick-login .quick-login-links {
+            margin-top: 0.7rem;
+            text-align: center;
+        }
+        .quick-login .quick-login-links a {
+            color: var(--navy-blue);
+            font-size: 0.92rem;
+            margin: 0 0.4rem;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .quick-login .quick-login-links a:hover {
+            color: #222;
+            text-decoration: underline;
+        }
+        .quick-login .quick-login-icon {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 0.7rem;
+        }
+        .quick-login .quick-login-icon i {
+            font-size: 2.1rem;
+            color: #ffd700;
+            filter: drop-shadow(0 2px 6px #ffe06688);
+            animation: bounceLoginIcon 1.2s infinite alternate;
+        }
+        @keyframes bounceLoginIcon {
+            from { transform: translateY(0);}
+            to   { transform: translateY(-7px);}
+        }
+
+                @media (max-width: 991px) {
+             .quick-login-container {
+                animation: none;
+            } 
+        }
+        @keyframes slideInQuickLogin {
+            from { opacity: 0; transform: translateY(-40px) scale(0.95);}
+            to   { opacity: 1; transform: translateY(0) scale(1);}
+        }
+        
+        @keyframes bounceLoginIcon {
+            from { transform: translateY(0);}
+            to   { transform: translateY(-7px);}
+        }
     </style>
 </head>
 <body>
@@ -220,86 +151,7 @@ include 'includes/header.php';
   </div>
 </div>
 
-<div class="hero-slider" id="heroSlider">
-    <div class="slider-track" id="sliderTrack">
-      <div class="slide" style="background-image: url('pic1.jpg');">
-        <div class="overlay"></div> 
-        <div class="container contents">
-            <div class="row align-items-center">
-                <div class="col-lg-6 hero-content fade-in">
-                    <h1>Africa's Premier Financial Institution</h1>
-                    <p class="lead">Experience world-class banking excellence with unparalleled security, innovation, and trust. Join millions of global customers who rely on GCC Bank for their most important financial decisions.</p>
-                    <div class="hero-buttons">
-                        <a href="register.php" class="btn btn-gold btn-lg">
-                            <i class="fas fa-user-plus me-2"></i>Open an Account
-                        </a>
-                        <a href="#about" class="btn btn-outline-light btn-lg">
-                            <i class="fas fa-info-circle me-2"></i>Learn More
-                        </a>
-                    </div>
-                </div>
-                <div class="col-lg-6 text-center slide-in-right">
-                    <div class="hero-stats row g-3">
-                        <div class="col-4">
-                            <div class="stats-card">
-                                <span class="stats-number">2.5M+</span>
-                                <span class="stats-label">Global Customers</span>
-                            </div>
-                        </div>
-                        <div class="col-4">
-                            <div class="stats-card">
-                                <span class="stats-number">$50B+</span>
-                                <span class="stats-label">Assets Management</span>
-                            </div>
-                        </div>
-                        <div class="col-4">
-                            <div class="stats-card">
-                                <span class="stats-number">150+</span>
-                                <span class="stats-label">Global Locations</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-      </div>
-      <div class="slide" style="background-image: url('pic2.jpg');">
-         <div class="overlay"></div> 
-        <div class="slide-content">
-          <h1>Inspire. Build. Repeat.</h1>
-          <p>Second slide, same greatness</p>
-        </div>
-      </div>
-      <div class="slide" style="background-image: url('pic3.avif');">
-         <div class="overlay"></div> 
-        <div class="slide-content">
-          <h1>Forward Only, No Rewinds</h1>
-          <p>This is how we slide</p>
-        </div>
-      </div>
-      <div class="slide" style="background-image: url('pic5.png');">
-         <div class="overlay"></div> 
-        <div class="slide-content">
-          <h1>Forward Only, No Rewinds</h1>
-          <p>This is how we slide</p>
-        </div>
-      </div>
-      <div class="slide" style="background-image: url('pic6.png');">
-        <div class="overlay"></div>
-      </div>
-      <div class="slide" style="background-image: url('pic7.png');">
-        <div class="overlay"></div>
-      </div>
-      <!-- Cloned First Slide for seamless forward loop -->
-      <div class="slide" style="background-image: url('pic1.jpg');">
-         <div class="overlay"></div> 
-        <div class="slide-content">
-          <h1>Welcome to Bright's World</h1>
-          <p>This is the first slide (clone)</p>
-        </div>
-      </div>
-    </div>
-  </div>
+<?php include 'hero_slider.php'; ?>
 
 <!-- About Section -->
 <section id="about" class="section about-section">
@@ -737,11 +589,11 @@ include 'includes/header.php';
         
         <div class="row g-4">
             <div class="col-lg-8">
-                <div class="contact-form fade-in">
+                        <!-- CSRF protection: The csrf_token_input() function is defined in 'includes/csrf.php' and outputs a hidden input with a CSRF token for form security.
+                        Ensure 'includes/csrf.php' is included in your header or bootstrap files to enable CSRF protection for this form. -->
                     <h4 class="text-navy mb-4">Send us a Message</h4>
-                    <form id="contactForm" class="needs-validation" novalidate>
+                    <form id="contactForm" class="needs-validation" novalidate action="contact_process.php" method="post">
                         <?= csrf_token_input() ?>
-                        <div class="row g-3">
                             <div class="col-md-6">
                                 <div class="form-floating">
                                     <input type="text" class="form-control" id="fullName" name="full_name" placeholder="Full Name" required>
@@ -758,7 +610,7 @@ include 'includes/header.php';
                             </div>
                             <div class="col-md-6">
                                 <div class="form-floating">
-                                    <input type="tel" class="form-control" id="phone" name="phone" placeholder="Phone Number" required>
+                                    <input type="tel" class="form-control" id="phone" name="phone" placeholder="Phone Number" required pattern="^(\+233|0)[235][0-9]{8}$">
                                     <label for="phone">Phone Number *</label>
                                     <div class="invalid-feedback">Please provide a valid Ghana phone number.</div>
                                 </div>
@@ -852,83 +704,6 @@ include 'includes/header.php';
 </section>
 
 <?php include 'includes/footer.php'; ?>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Optimized slider implementation
-    const sliderTrack = document.getElementById('sliderTrack');
-    const slides = document.querySelectorAll('.slide');
-    const slideCount = slides.length;
-    const transitionDuration = 1000; // ms
-    const slideInterval = 6000; // ms
-    
-    // Clone the first slide and append to end for seamless looping
-    const firstSlide = slides[0].cloneNode(true);
-    sliderTrack.appendChild(firstSlide);
-    
-    let currentIndex = 0;
-    let isTransitioning = false;
-    let sliderInterval;
-    
-    function goToSlide(index) {
-        if (isTransitioning) return;
-        
-        isTransitioning = true;
-        currentIndex = index;
-        
-        sliderTrack.style.transition = `transform ${transitionDuration}ms ease-in-out`;
-        sliderTrack.style.transform = `translateX(-${currentIndex * 100}%)`;
-        
-        // After transition completes, check if we need to reset position
-        setTimeout(() => {
-            isTransitioning = false;
-            
-            // If we're at the cloned first slide, instantly jump to the real first slide
-            if (currentIndex === slideCount) {
-                sliderTrack.style.transition = 'none';
-                sliderTrack.style.transform = 'translateX(0)';
-                currentIndex = 0;
-                
-                // Force reflow
-                void sliderTrack.offsetWidth;
-            }
-        }, transitionDuration);
-    }
-    
-    function nextSlide() {
-        goToSlide(currentIndex + 1);
-    }
-    
-    function startSlider() {
-        sliderInterval = setInterval(nextSlide, slideInterval);
-    }
-    
-    function stopSlider() {
-        clearInterval(sliderInterval);
-    }
-    
-    // Handle visibility changes
-    document.addEventListener('visibilitychange', function() {
-        if (document.hidden) {
-            stopSlider();
-        } else {
-            startSlider();
-        }
-    });
-    
-    // Initialize
-    startSlider();
-    
-    // Pause on hover
-  
-    
-    // Preload images for smoother transitions
-    const imageUrls = ['pic1.jpg', 'pic2.jpg', 'pic3.avif', 'pic5.png', 'pic6.png', 'pic7.png'];
-    imageUrls.forEach(url => {
-        const img = new Image();
-        img.src = url;
-    });
-});
-</script>
+<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 </body>
 </html>

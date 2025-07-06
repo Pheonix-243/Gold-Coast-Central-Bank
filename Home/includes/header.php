@@ -36,8 +36,8 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="index.php">
-                <!-- <img src="assets/images/gcc-logo.webp" alt="GCC Bank Logo" height="40" class="me-2"> -->
-                <span class="brand-text">GCC Bank</span>
+                 <img src="assets/images/gcc-logo.webp" alt="GCC Bank Logo" height="40" class="me-2"> 
+                <!--<span class="brand-text">GCC Bank</span>-->
             </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">

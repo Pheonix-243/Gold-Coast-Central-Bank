@@ -22,12 +22,6 @@
     box-sizing: border-box;
 }
 
-body {
-    font-family: 'Inter', sans-serif;
-    line-height: 1.6;
-    color: var(--dark-gray);
-    background-color: var(--white);
-}
 
 h1, h2, h3, h4, h5, h6 {
     font-family: 'Playfair Display', serif;

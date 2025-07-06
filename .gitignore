@@ -29,3 +29,60 @@ storage/framework/views/
 
 # Ignore PHPUnit result cache
 .phpunit.result.cache
+# Ignore coverage reports
+/coverage/
+# Ignore build artifacts
+/build/ 
+# Ignore temporary files
+/tmp/
+# Ignore compiled files
+/*.phar
+# Ignore backup files
+*.bak
+# Ignore test files
+/tests/_output/
+# Ignore documentation files
+/docs/
+# Ignore configuration files
+/config/*.php
+# Ignore compiled views
+/storage/framework/views/*.php
+# Ignore compiled classes
+/bootstrap/cache/*.php
+# Ignore vendor-specific files
+/vendor-bin/
+# Ignore specific IDE files
+/.vscode/settings.json
+# Ignore specific IDE configurations
+/.idea/workspace.xml
+# Ignore specific log files
+/logs/*.log
+# Ignore specific cache files
+/cache/*.cache
+# Ignore specific storage files
+/storage/*.tmp
+
+# Ignore specific database files
+/database/*.sqlite  
+# Ignore specific backup files
+/database/backups/*.sql
+# Ignore specific test files
+/tests/Integration/
+# Ignore specific configuration files
+/config/database.php
+# Ignore specific environment files
+/.env.local
+# Ignore specific vendor files
+/vendor/composer/installed.json
+# Ignore specific cache directories
+/cache/framework/
+
+# Ignore specific storage directories
+/storage/app/public/    
+# Ignore specific log directories
+/storage/logs/laravel.log
+# Ignore specific temporary directories
+/storage/temp/
+# Ignore specific compiled files
+/storage/framework/compiled.php
+# Ignore specific vendor directories
