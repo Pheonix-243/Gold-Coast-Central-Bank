@@ -1,0 +1,17 @@
+{
+    "name": "yourname/bank-project",
+    "description": "Banking application for Sawongam Bank",
+    "type": "project",
+    "require": {
+        "mpdf/mpdf": "^8.1",
+        "php": "^8.2"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Your Name",
+            "email": "your.email@example.com"
+        }
+    ],
+    "minimum-stability": "stable"
+}
