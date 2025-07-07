@@ -140,11 +140,11 @@ $types = mysqli_query($con, "SELECT * FROM transaction_types ORDER BY name");
                     <div class="nav_link_text">Withdraw</div>
                 </a>
 
-                <a href="../transactions/transfer.php" class="nav_link" aria-label="transfer">
+                <a href="../transactions/transsfer.php" class="nav_link" aria-label="transsfer">
                     <div class="nav_link_icon">
                         <i class="fas fa-exchange-alt"></i>
                     </div>
-                    <div class="nav_link_text">Transfer</div>
+                    <div class="nav_link_text">Transsfer</div>
                 </a>
 
                 <a href="../transactions/history.php" class="nav_link active" aria-label="history">
@@ -195,11 +195,11 @@ $types = mysqli_query($con, "SELECT * FROM transaction_types ORDER BY name");
                 </div>
             </div>
 
-            <section class="transfer_section">
-                <main class="transfer_main">
-                    <div class="transfer_card">
-                        <div class="transfer_header">
-                            <div class="transfer_icon">
+            <section class="history_section">
+                <main class="history_main">
+                    <div class="history_card">
+                        <div class="history_header">
+                            <div class="history_icon">
                                 <i class="fas fa-history"></i>
                             </div>
                             <div>
@@ -243,9 +243,9 @@ $types = mysqli_query($con, "SELECT * FROM transaction_types ORDER BY name");
                         </div>
 
                         <!-- Filters -->
-                        <div class="transfer_card">
+                        <div class="history_card">
                             <h3><i class="fas fa-filter"></i> Filter Transactions</h3>
-                            <form method="GET" class="transfer_form">
+                            <form method="GET" class="history_form">
                                 <div class="form_group">
                                     <label>Transaction Type</label>
                                     <select name="type">
@@ -304,8 +304,8 @@ $types = mysqli_query($con, "SELECT * FROM transaction_types ORDER BY name");
                         </div>
 
                         <!-- Transactions Table -->
-                        <div class="transfer_card">
-                            <div class="transfer_header" style="margin-bottom: 20px;">
+                        <div class="history_card">
+                            <div class="history_header" style="margin-bottom: 20px;">
                                 <h3><i class="fas fa-list"></i> Transaction List</h3>
                                 <button class="btn btn-outline">
                                     <i class="fas fa-download"></i> Export
@@ -413,28 +413,13 @@ $types = mysqli_query($con, "SELECT * FROM transaction_types ORDER BY name");
                     </div>
                 </main>
                 
-                <aside class="transfer_aside">
+                <aside class="history_aside">
                     <div class="info_card">
                         <h3><i class="fas fa-info-circle"></i> Transaction Help</h3>
                         <p>Filter your transactions by type, date range, amount, or search for specific transactions.</p>
                     </div>
                     
-                    <div class="info_card">
-                        <h3><i class="fas fa-clock"></i> Processing Times</h3>
-                        <ul class="info_list">
-                            <li>
-                                <strong>Transfers:</strong> Instant to 2 hours
-                            </li>
-                            <li>
-                                <strong>Deposits:</strong> Instant to 30 minutes
-                            </li>
-                            <li>
-                                <strong>Withdrawals:</strong> Instant
-                            </li>
-                        </ul>
-                    </div>
-                    
-                    <div class="info_card">
+                    <div class="info_card" style="margin-top: 30px;">
                         <h3><i class="fas fa-headset"></i> Need Help?</h3>
                         <p>Contact our 24/7 customer support for assistance with your transactions.</p>
                         <a href="#" class="btn btn-outline">

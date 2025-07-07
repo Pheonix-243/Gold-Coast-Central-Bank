@@ -1,6 +1,12 @@
 <?php
 session_start();
 require_once('../conn.php');
+require_once('includes/notification.php');
+
+// Generate CSRF token if not exists
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 
 // Redirect if already logged in
 if(isset($_SESSION['client_loggedin'])) {
@@ -14,58 +20,79 @@ if(isset($_GET['msg'])) {
 }
 
 if(isset($_POST['submit'])) {  
-    $email = trim($_POST['email']);
-    $password = $_POST['password'];
-    
-    // Get user by email only
-    $sql = "SELECT a.account, a.balance, a.status, a.password, 
-                   h.name, h.email, h.image 
-            FROM accounts_info a
-            JOIN accountsholder h ON a.account = h.account
-            WHERE h.email = ?";
-    
-    $stmt = mysqli_prepare($con, $sql);
-    mysqli_stmt_bind_param($stmt, "s", $email);
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
-    
-    if(mysqli_num_rows($result) == 1) {
-        $client = mysqli_fetch_assoc($result);
+    // Verify CSRF token
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        $error = "Invalid request. Please try again.";
+    } else {
+        $email = trim($_POST['email']);
+        $password = $_POST['password'];
         
-        if(password_verify($password, $client['password'])) {
-            if($client['status'] == 'Active') {
-                // Set all session variables
-                $_SESSION['client_loggedin'] = true;
-                $_SESSION['client_account'] = $client['account'];
-                $_SESSION['client_name'] = $client['name'];
-                $_SESSION['client_email'] = $client['email'];
-                $_SESSION['client_balance'] = $client['balance'];
-                $_SESSION['client_image'] = $client['image'];
-                
-                // Record login
-                $ip = $_SERVER['REMOTE_ADDR'];
-                $loginTime = date('Y-m-d H:i:s');
-                $insert_sql = "INSERT INTO client_login_history (account, login_time, ip_address) 
-                              VALUES (?, ?, ?)";
-                $insert_stmt = mysqli_prepare($con, $insert_sql);
-                mysqli_stmt_bind_param($insert_stmt, "sss", $client['account'], $loginTime, $ip);
-                mysqli_stmt_execute($insert_stmt);
-                $_SESSION['login_id'] = mysqli_insert_id($con);
-                
-                header('Location: dashboard/index.php');
-                exit;
+        // Get user by email only
+        $sql = "SELECT a.account, a.balance, a.status, a.password, 
+                       h.name, h.email, h.image 
+                FROM accounts_info a
+                JOIN accountsholder h ON a.account = h.account
+                WHERE h.email = ?";
+        
+        $stmt = mysqli_prepare($con, $sql);
+        mysqli_stmt_bind_param($stmt, "s", $email);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        
+        if(mysqli_num_rows($result) == 1) {
+            $client = mysqli_fetch_assoc($result);
+            
+            if(password_verify($password, $client['password'])) {
+                if($client['status'] == 'Active') {
+                    // Set all session variables
+                    $_SESSION['client_loggedin'] = true;
+                    $_SESSION['client_account'] = $client['account'];
+                    $_SESSION['client_name'] = $client['name'];
+                    $_SESSION['client_email'] = $client['email'];
+                    $_SESSION['client_balance'] = $client['balance'];
+                    $_SESSION['client_image'] = $client['image'];
+                    
+                    // Record login
+                    $ip = $_SERVER['REMOTE_ADDR'];
+                    $loginTime = date('Y-m-d H:i:s');
+                    $insert_sql = "INSERT INTO client_login_history (account, login_time, ip_address) 
+                                  VALUES (?, ?, ?)";
+                    $insert_stmt = mysqli_prepare($con, $insert_sql);
+                    mysqli_stmt_bind_param($insert_stmt, "sss", $client['account'], $loginTime, $ip);
+                    mysqli_stmt_execute($insert_stmt);
+                    $_SESSION['login_id'] = mysqli_insert_id($con);
+
+                    // Send login notification
+                    try {
+                        $notification = new NotificationSystem($con);
+                        $notification->sendNotification(
+                            $_SESSION['client_account'],
+                            'login',
+                            'New Login Detected',
+                            "Your account was accessed from " . $_SERVER['REMOTE_ADDR'] . " on " . date('Y-m-d H:i:s'),
+                            ['ip' => $_SERVER['REMOTE_ADDR'], 'device' => $_SERVER['HTTP_USER_AGENT']],
+                            true, // Send email
+                            false // Not deletable
+                        );
+                    } catch (Exception $e) {
+                        // Log error but don't break login flow
+                        error_log("Notification error: " . $e->getMessage());
+                    }
+
+                    header('Location: dashboard/index.php');
+                    exit;
+                } else {
+                    $error = "Your account is inactive. Please contact support.";
+                }
             } else {
-                $error = "Your account is inactive. Please contact support.";
+                $error = "Invalid email or password";
             }
         } else {
             $error = "Invalid email or password";
         }
-    } else {
-        $error = "Invalid email or password";
     }
 }
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -100,6 +127,7 @@ if(isset($_POST['submit'])) {
                     <div class="col-md-12 fw-bold mb-5 text-center login-header">Welcome to Gold Coast Central Bank!</div>
 <!-- Change just the form part (rest remains the same) -->
 <form action="login.php" method="POST">
+<input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
     <div class="mb-2">
         <label for="email" class="form-label text-black login-label">Email</label>
         <input type="email" class="form-control rounded-4 textfield" id="email" name="email" required>

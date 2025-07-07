@@ -86,3 +86,9 @@ storage/framework/views/
 # Ignore specific compiled files
 /storage/framework/compiled.php
 # Ignore specific vendor directories
+
+
+
+/client/includes/composer.json
+/client/includes/composer.lock
+/client/includes/vendor/

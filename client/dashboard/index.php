@@ -1,5 +1,6 @@
 <?php
 require_once('../includes/auth.php');
+require_once('../includes/notification.php');
 
 // Add this to fetch the profile picture:
 $sql = "SELECT image FROM accountsholder WHERE account = ?";
@@ -140,6 +141,12 @@ $monthlySummary = mysqli_fetch_assoc($stmt->get_result());
                     </div>
                     <div class="nav_link_text">History</div>
                 </a>
+                <a href="../pages/analytics.php" class="nav_link" aria-label="history">
+                <div class="nav_link_icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="nav_link_text">Analytics</div>
+            </a>
 
                 <a href="../settings/password.php" class="nav_link" aria-label="settings">
                     <div class="nav_link_icon">
@@ -417,6 +424,168 @@ $monthlySummary = mysqli_fetch_assoc($stmt->get_result());
                 icon.classList.replace('fa-eye-slash', 'fa-eye');
             }
         });
+
+// Replace your existing notification dropdown code with this:
+
+// Notification system
+document.addEventListener('DOMContentLoaded', function() {
+    const notificationBell = document.querySelector('.topbar_icon.alert');
+    const notificationDropdown = document.createElement('div');
+    notificationDropdown.className = 'notification-dropdown';
+    notificationDropdown.innerHTML = `
+        <div class="notification-header">
+            <h4>Notifications</h4>
+            <button id="mark-all-read">Mark all as read</button>
+        </div>
+        <div class="notification-list"></div>
+        <div class="notification-footer">
+            <a href="../pages/notifications.php">View all notifications</a>
+        </div>
+    `;
+    notificationBell.appendChild(notificationDropdown);
+    
+    // Load notifications and update badge
+    function updateNotifications() {
+        fetch('../scripts/get_unread_count.php')
+            .then(response => response.json())
+            .then(data => {
+                updateBadge(data.count || 0);
+            });
+    }
+    
+    // Update badge count
+    function updateBadge(count) {
+        let badge = notificationBell.querySelector('.notification-badge');
+        
+        if (count > 0) {
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'notification-badge';
+                notificationBell.appendChild(badge);
+            }
+            badge.textContent = count > 9 ? '9+' : count;
+        } else if (badge) {
+            badge.remove();
+        }
+    }
+    
+    // Toggle dropdown
+    notificationBell.addEventListener('click', function(e) {
+        e.stopPropagation();
+        
+        if (notificationDropdown.style.display === 'block') {
+            notificationDropdown.style.display = 'none';
+        } else {
+            // When opening dropdown
+            notificationDropdown.style.display = 'block';
+            loadNotifications(false);
+            
+            // Clear badge immediately
+            updateBadge(0);
+            
+            // Mark all as read in backend
+            fetch('../scripts/mark_all_read.php', {
+                method: 'POST'
+            }).catch(error => console.error('Error:', error));
+        }
+    });
+    
+    // Close when clicking outside
+    document.addEventListener('click', function() {
+        notificationDropdown.style.display = 'none';
+    });
+    
+    // Initial load
+    updateNotifications();
+    
+    // Poll for new notifications every 60 seconds
+    setInterval(updateNotifications, 60000);
+    
+    // Function to load notifications
+    function loadNotifications(unreadOnly = false) {
+        fetch('../scripts/get_notifications.php?unread=' + (unreadOnly ? '1' : '0'))
+            .then(response => response.json())
+            .then(data => {
+                const list = notificationDropdown.querySelector('.notification-list');
+                list.innerHTML = '';
+                
+                if (data.length === 0) {
+                    list.innerHTML = '<div class="no-notifications">No notifications</div>';
+                    return;
+                }
+                
+                data.forEach(notif => {
+                    const item = document.createElement('div');
+                    item.className = `notification-item ${notif.is_read ? '' : 'unread'}`;
+                    item.dataset.id = notif.id;
+                    item.innerHTML = `
+                        <div class="notification-icon">
+                            ${getNotificationIcon(notif.type)}
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-title">${notif.title}</div>
+                            <div class="notification-message">${notif.message}</div>
+                            <div class="notification-time">${notif.time_ago}</div>
+                        </div>
+                        <button class="notification-delete" ${notif.is_deletable ? '' : 'disabled'}>
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                    list.appendChild(item);
+                    
+                    // Click handler for individual notifications
+                    item.addEventListener('click', function(e) {
+                        if (!e.target.classList.contains('notification-delete')) {
+                            if (!notif.is_read) {
+                                markAsRead(notif.id);
+                                item.classList.remove('unread');
+                            }
+                        }
+                    });
+                    
+                    // Delete button handler
+                    const deleteBtn = item.querySelector('.notification-delete');
+                    deleteBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        deleteNotification(notif.id);
+                        item.remove();
+                    });
+                });
+            });
+    }
+    
+    // Helper functions
+    function getNotificationIcon(type) {
+        const icons = {
+            'transaction': '<i class="fas fa-exchange-alt"></i>',
+            'login': '<i class="fas fa-sign-in-alt"></i>',
+            'security': '<i class="fas fa-shield-alt"></i>',
+            'profile_update': '<i class="fas fa-user-edit"></i>',
+            'system': '<i class="fas fa-info-circle"></i>'
+        };
+        return icons[type] || '<i class="fas fa-bell"></i>';
+    }
+    
+    function markAsRead(id) {
+        fetch('../scripts/mark_notification_read.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ id: id })
+        });
+    }
+    
+    function deleteNotification(id) {
+        fetch('../scripts/delete_notification.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ id: id })
+        });
+    }
+});
     </script>
 </body>
 </html>

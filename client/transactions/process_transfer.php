@@ -1,5 +1,6 @@
 <?php
 require_once('../includes/auth.php');
+require_once('../includes/notification.php');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['confirm'])) {
     header('Location: transfer.php');
@@ -130,6 +131,51 @@ try {
 
     // Update session balance
     $_SESSION['client_balance'] -= $amount;
+
+
+
+
+
+
+// Send notifications to sender and receiver
+$notification = new NotificationSystem($con);
+
+// Sender notification
+$notification->sendNotification(
+    $senderAccount,
+    'transaction',
+    'Transfer Completed',
+    "You transferred GHC" . number_format($amount, 2) . " to $recipientName ($recipientAccount)",
+    [
+        'amount' => $amount,
+        'recipient' => $recipientName,
+        'account' => $recipientAccount,
+        'reference' => $reference
+    ],
+    true, // Send email
+    true
+);
+
+// Receiver notification (only for internal transfers)
+if ($transferType === 'internal') {
+    $notification->sendNotification(
+        $recipientAccount,
+        'transaction',
+        'Payment Received',
+        "You received GHC" . number_format($amount, 2) . " from $senderName ($senderAccount)",
+        [
+            'amount' => $amount,
+            'sender' => $senderName,
+            'account' => $senderAccount,
+            'reference' => $reference
+        ],
+        true, // Send email
+        true
+    );
+}
+
+
+
 
     $_SESSION['success'] = "Transfer of GHC" . number_format($amount, 2) . " to $recipientName ($recipientAccount) was successful!";
     header('Location: ../dashboard/');
