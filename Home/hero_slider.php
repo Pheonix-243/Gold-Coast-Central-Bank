@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Premium Banking Solutions</title>
     <!-- Preload first image for better performance -->
-    <link rel="preload" href="pic1.jpg" as="image" fetchpriority="high">
+    <link rel="preload" href="./assets/images/pic1.jpg" as="image" fetchpriority="high">
     
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -36,7 +36,7 @@
             background-position: center;
             background-attachment: fixed;
             background-repeat: no-repeat;
-            background-color: #232526; /* Fallback color */
+            /* background-color: #232526; Fallback color */
             flex-shrink: 0;
             overflow: hidden;
             filter: brightness(0.7); /* Initial dim state */
@@ -290,7 +290,7 @@
     <button class="slider-arrow left" aria-label="Previous Slide">&#8592;</button>
     <div class="slider-track">
         <!-- Slide 1 -->
-        <div class="slide active" data-src="pic1.jpg" data-index="0">
+        <div class="slide active" data-src="./assets/images/pic1.jpg" data-index="0">
             <div class="slide-content">
                 <h1>Premium Banking Solutions</h1>
                 <p>Experience world-class financial services with our award-winning digital platform</p>
@@ -298,7 +298,7 @@
             </div>
         </div>
         <!-- Slide 2 -->
-        <div class="slide" data-src="pic2.jpg" data-index="1">
+        <div class="slide" data-src="./assets/images/pic2.jpg" data-index="1">
             <div class="slide-content">
                 <h1>Global Investment Opportunities</h1>
                 <p>Grow your wealth with our expert portfolio management and investment strategies</p>
@@ -306,7 +306,7 @@
             </div>
         </div>
         <!-- Slide 3 -->
-        <div class="slide" data-src="pic3.avif" data-index="2">
+        <div class="slide" data-src="./assets/images/pic3.avif" data-index="2">
             <div class="slide-content">
                 <h1>Innovative Digital Banking</h1>
                 <p>Bank anytime, anywhere with our secure and intuitive mobile banking app</p>
@@ -314,7 +314,7 @@
             </div>
         </div>
         <!-- Slide 4 -->
-        <div class="slide" data-src="https://source.unsplash.com/1600x900/?mobile,banking" data-index="3">
+        <div class="slide" data-src="./assets/images/pic4.png" data-index="3">
             <div class="slide-content">
                 <h1>Bank Anywhere, Anytime</h1>
                 <p>With our intuitive mobile app, your bank fits right in your pocket — fast, safe, and seamless.</p>
@@ -322,7 +322,7 @@
             </div>
         </div>
         <!-- Slide 5 -->
-        <div class="slide" data-src="https://source.unsplash.com/1600x900/?cybersecurity,finance" data-index="4">
+        <div class="slide" data-src="./assets/images/pic5.png" data-index="4">
             <div class="slide-content">
                 <h1>Bulletproof Security</h1>
                 <p>We guard your data with top-tier encryption, AI fraud detection, and 24/7 monitoring.</p>
@@ -330,7 +330,7 @@
             </div>
         </div>
         <!-- Slide 6 -->
-        <div class="slide" data-src="https://source.unsplash.com/1600x900/?customer-service,bank" data-index="5">
+        <div class="slide" data-src="./assets/images/pic6.png" data-index="5">
             <div class="slide-content">
                 <h1>Human-Centered Support</h1>
                 <p>Talk to real people who care. No bots, no runaround — just help when you need it.</p>
@@ -338,7 +338,7 @@
             </div>
         </div>
         <!-- Slide 7 -->
-        <div class="slide" data-src="https://source.unsplash.com/1600x900/?fintech,technology" data-index="6">
+        <div class="slide" data-src="./assets/images/pic7.png" data-index="6">
             <div class="slide-content">
                 <h1>Future-Ready Technology</h1>
                 <p>Our systems evolve with your needs, integrating blockchain, AI, and next-gen APIs.</p>
@@ -346,7 +346,7 @@
             </div>
         </div>
         <!-- Slide 8 -->
-        <div class="slide" data-src="https://source.unsplash.com/1600x900/?entrepreneur,success" data-index="7">
+        <div class="slide" data-src="./assets/images/pic8.png" data-index="7">
             <div class="slide-content">
                 <h1>For Entrepreneurs & Innovators</h1>
                 <p>Launch, grow, and scale your business with tailored banking built for modern hustlers.</p>
@@ -354,7 +354,7 @@
             </div>
         </div>
         <!-- Slide 9 -->
-        <div class="slide" data-src="https://source.unsplash.com/1600x900/?money,transfer" data-index="8">
+        <div class="slide" data-src="./assets/images/pic9.jpg" data-index="8">
             <div class="slide-content">
                 <h1>Fast International Transfers</h1>
                 <p>Send money across borders in seconds with live exchange rates and transparent fees.</p>
@@ -362,7 +362,7 @@
             </div>
         </div>
         <!-- Slide 10 -->
-        <div class="slide" data-src="https://source.unsplash.com/1600x900/?credit,card" data-index="9">
+        <div class="slide" data-src="./assets/images/pic10.jpg" data-index="9">
             <div class="slide-content">
                 <h1>Smart Credit Solutions</h1>
                 <p>Flexible credit lines and intelligent spending tools — built to help you thrive, not just survive.</p>
@@ -370,7 +370,7 @@
             </div>
         </div>
         <!-- Slide 11 -->
-        <div class="slide" data-src="https://source.unsplash.com/1600x900/?luxury,lifestyle,finance" data-index="10">
+        <div class="slide" data-src="./assets/images/pic11.png" data-index="10">
             <div class="slide-content">
                 <h1>Banking That Matches Your Lifestyle</h1>
                 <p>Whether you're a jetsetter or a homebody, our personalized services meet your rhythm.</p>
@@ -378,7 +378,7 @@
             </div>
         </div>
         <!-- Slide 1 (clone for infinite loop) -->
-        <div class="slide" data-src="pic1.jpg" data-index="0">
+        <div class="slide" data-src="./assets/images/pic1.jpg" data-index="0">
             <div class="slide-content">
                 <h1>Premium Banking Solutions</h1>
                 <p>Experience world-class financial services with our award-winning digital platform</p>

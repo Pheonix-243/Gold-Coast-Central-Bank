@@ -137,10 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
                         </form>
 
-                        <div class="mt-4 pt-4 border-top text-center">
-                            <p class="text-muted mb-2"><small>Demo Login Credentials:</small></p>
-                            <p class="text-muted"><small>Email: demo@gccbank.com.gh<br>Password: Demo123!</small></p>
-                        </div>
+                    
                     </div>
                 </div>
 
