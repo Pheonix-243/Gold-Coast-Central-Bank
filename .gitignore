@@ -92,3 +92,5 @@ storage/framework/views/
 /client/includes/composer.json
 /client/includes/composer.lock
 /client/includes/vendor/
+/home/includes/vendor
+/home/clock.html

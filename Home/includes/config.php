@@ -1,6 +1,8 @@
 <?php
 // Configuration file for GCC Bank website
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 
 // Site configuration
@@ -33,27 +35,6 @@ function sanitize_input($data) {
     return $data;
 }
 
-// Function to validate email
-function validate_email($email) {
-    return filter_var($email, FILTER_VALIDATE_EMAIL);
-}
-
-// Function to validate phone number (Ghana format)
-function validate_ghana_phone($phone) {
-    // Remove all non-digits
-    $phone = preg_replace('/[^0-9]/', '', $phone);
-    
-    // Check if it's a valid Ghana phone number format
-    if (preg_match('/^(0|233)?[2-9][0-9]{8}$/', $phone)) {
-        return true;
-    }
-    return false;
-}
-
-// Error and success message handling
-function set_message($type, $message) {
-    $_SESSION['message'] = ['type' => $type, 'text' => $message];
-}
 
 function get_message() {
     if (isset($_SESSION['message'])) {

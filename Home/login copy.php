@@ -1,18 +1,14 @@
 <?php
 session_start();
-require_once 'config/database.php';
-require_once 'includes/otp.php';
-require_once 'includes/security_logger.php';
 
-// Initialize security logger
-$logger = new SecurityLogger();
+require_once('../conn.php');
+// require_once('../client/includes/notification.php');
+require_once('includes/otp.php');
 
-// Page title for header
-$page_title = 'Secure Login';
 
 // Already logged in? Redirect.
 if (isset($_SESSION['client_loggedin']) && $_SESSION['client_loggedin'] === true) {
-    header('Location: dashboard/index.php');
+    header('Location: /gccb/client/dashboard/index.php');
     exit;
 }
 
@@ -26,98 +22,121 @@ if (isset($_GET['msg'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
-    $rememberMe = isset($_POST['remember_me']);
 
     if (empty($email) || empty($password)) {
         $error = "Please fill in all fields.";
-        $logger->logEvent('login_attempt_empty_fields', [
-            'email' => $email,
-            'ip' => $_SERVER['REMOTE_ADDR']
-        ], 'WARNING');
     } else {
-        // Enhanced database query with security checks
-        $conn = DatabaseConnection::getInstance()->getConnection();
         $sql = "SELECT a.account, a.balance, a.status, a.password,
-                       h.name, h.email, h.image
+                       h.name, h.email, h.image 
                 FROM accounts_info a
                 JOIN accountsholder h ON a.account = h.account
                 WHERE h.email = ? LIMIT 1";
 
-        $stmt = $conn->prepare($sql);
+        $stmt = mysqli_prepare($con, $sql);
         if (!$stmt) {
             $error = "Database error.";
-            $logger->logEvent('login_db_error', [
-                'email' => $email,
-                'error' => 'Failed to prepare statement'
-            ], 'ERROR');
         } else {
-            $stmt->execute([$email]);
-            $client = $stmt->fetch(PDO::FETCH_ASSOC);
+            mysqli_stmt_bind_param($stmt, "s", $email);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
 
-            if ($client) {
-                // Check account status
-                if ($client['status'] !== 'Active') {
-                    $error = "Your account is inactive. Please contact support.";
-                    $logger->logEvent('login_inactive_account', [
-                        'email' => $email,
-                        'account' => $client['account']
-                    ], 'WARNING');
-                } elseif (password_verify($password, $client['password'])) {
-                    // Password correct - initiate OTP verification
-                    $otpSystem = new EnhancedOTPSystem();
-                    
-                    // Store login data in session temporarily
-                    $_SESSION['pending_login'] = [
-                        'account' => $client['account'],
-                        'name' => $client['name'],
-                        'email' => $client['email'],
-                        'balance' => $client['balance'],
-                        'image' => $client['image'],
-                        'remember_me' => $rememberMe
-                    ];
-                    
-                    // Generate and send OTP
-                    $result = $otpSystem->generateAndSendOTP($client['email'], 'login_verification');
-                    
-                    if ($result['status'] === 'success') {
-                        $logger->logEvent('login_otp_sent', [
-                            'email' => $client['email'],
-                            'account' => $client['account']
-                        ]);
-                        
-                        header('Location: includes/otp_verification.php');
+            if ($result && mysqli_num_rows($result) === 1) {
+                $client = mysqli_fetch_assoc($result);
+
+                if (password_verify($password, $client['password'])) {
+
+
+
+
+
+
+
+// Replace the example OTP usage with this:
+if (password_verify($password, $client['password'])) {
+    if ($client['status'] === 'Active') {
+        // Store login data in session temporarily
+        $_SESSION['pending_login'] = [
+            'account' => $client['account'],
+            'name' => $client['name'],
+            'email' => $client['email'],
+            'balance' => $client['balance'],
+            'image' => $client['image']
+        ];
+        
+        // Generate and send OTP
+        $action = 'login_verification';
+        $result = generateAndSendOTP($client['email'], $action);
+        
+        if ($result['status'] === 'success') {
+            header('Location: includes/otp_verification.php');
+            exit;
+        } else {
+            $error = "Failed to send OTP: " . $result['message'];
+            unset($_SESSION['pending_login']);
+        }
+    } else {
+        $error = "Your account is inactive. Please contact support.";
+    }
+}
+                   
+
+
+
+
+
+
+
+
+
+
+                    if ($client['status'] === 'Active') {
+                        // Set session
+                        $_SESSION['client_loggedin'] = true;
+                        $_SESSION['client_account'] = $client['account'];
+                        $_SESSION['client_name'] = $client['name'];
+                        $_SESSION['client_email'] = $client['email'];
+                        $_SESSION['client_balance'] = $client['balance'];
+                        $_SESSION['client_image'] = $client['image'];
+
+                        // Insert login history
+                        $ip = $_SERVER['REMOTE_ADDR'];
+                        $loginTime = date('Y-m-d H:i:s');
+                        $insert_sql = "INSERT INTO client_login_history (account, login_time, ip_address) 
+                                       VALUES (?, ?, ?)";
+                        $insert_stmt = mysqli_prepare($con, $insert_sql);
+
+                        if ($insert_stmt) {
+                            mysqli_stmt_bind_param($insert_stmt, "sss", $client['account'], $loginTime, $ip);
+                            mysqli_stmt_execute($insert_stmt);
+                            $_SESSION['login_id'] = mysqli_insert_id($con);
+                        }
+
+                                            // Send login notification
+                    // try {
+                    //     $notification = new NotificationSystem($con);
+                    //     $notification->sendNotification(
+                    //         $_SESSION['client_account'],
+                    //         'login',
+                    //         'New Login Detected',
+                    //         "Your account was accessed from " . $_SERVER['REMOTE_ADDR'] . " on " . date('Y-m-d H:i:s'),
+                    //         ['ip' => $_SERVER['REMOTE_ADDR'], 'device' => $_SERVER['HTTP_USER_AGENT']],
+                    //         true, // Send email
+                    //         false // Not deletable
+                    //     );
+                    // } catch (Exception $e) {
+                    //     error_log("Notification error: " . $e->getMessage());
+                    // }
+
+                        header('Location: /gccb/client/dashboard/index.php');
                         exit;
                     } else {
-                        $error = "Failed to send verification code: " . $result['message'];
-                        unset($_SESSION['pending_login']);
-                        $logger->logEvent('login_otp_failed', [
-                            'email' => $client['email'],
-                            'error' => $result['message']
-                        ], 'ERROR');
+                        $error = "Your account is inactive. Please contact support.";
                     }
-                    
                 } else {
-                    // Invalid password
                     $error = "Invalid email or password.";
-                    
-                    // Log failed attempt
-                    $logger->logEvent('login_failed', [
-                        'email' => $email,
-                        'reason' => 'invalid_password'
-                    ], 'WARNING');
-                    
-                    // Increment failed attempts counter
-                    $stmt = $conn->prepare("INSERT INTO security_logs (event_type, ip_address, data, created_at) VALUES ('login_failed', ?, ?, NOW())");
-                    $logData = json_encode(['email' => $email, 'reason' => 'invalid_password']);
-                    $stmt->execute([$_SERVER['REMOTE_ADDR'], $logData]);
                 }
             } else {
-                // User not found
                 $error = "Invalid email or password.";
-                $logger->logEvent('login_failed', [
-                    'email' => $email,
-                    'reason' => 'user_not_found'
-                ], 'WARNING');
             }
         }
     }
@@ -168,7 +187,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <input class="form-check-input" type="checkbox" id="rememberMe" name="remember_me">
                                     <label class="form-check-label text-muted" for="rememberMe">Remember me</label>
                                 </div>
-                                <a href="password_reset.php" class="text-decoration-none">Forgot password?</a>
+                                <a href="#" class="text-decoration-none">Forgot password?</a>
                             </div>
 
                             <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
@@ -209,4 +228,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 </div>
 
-
+<?php include 'includes/footer.php'; ?>

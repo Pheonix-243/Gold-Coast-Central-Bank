@@ -37,7 +37,7 @@
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="index.php">
                  <img src="assets/images/gcc-logo.webp" alt="GCC Bank Logo" height="40" class="me-2"> 
-                <!--<span class="brand-text">GCC Bank</span>-->
+                <!-- <span class="brand-text d-none d-lg-block">Gold Coast Central Bank</span> -->
             </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -50,22 +50,45 @@
                         <a class="nav-link <?= basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : '' ?>" href="index.php">Home</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="servicesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Services
+                        <a class="nav-link dropdown-toggle" href="#" id="personalBankingDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Personal Banking
                         </a>
-                        <ul class="dropdown-menu" aria-labelledby="servicesDropdown">
-                            <li><a class="dropdown-item" href="#services">Personal Banking</a></li>
-                            <li><a class="dropdown-item" href="#services">Business Banking</a></li>
-                            <li><a class="dropdown-item" href="#services">International Transfers</a></li>
-                            <li><a class="dropdown-item" href="#services">Mobile Money</a></li>
-                            <li><a class="dropdown-item" href="#services">Digital Wallet</a></li>
+                        <ul class="dropdown-menu" aria-labelledby="personalBankingDropdown">
+                            <li><a class="dropdown-item" href="personal-accounts.php"><i class="fas fa-piggy-bank me-2"></i>Accounts</a></li>
+                            <li><a class="dropdown-item" href="loans.php"><i class="fas fa-hand-holding-usd me-2"></i>Loans</a></li>
+                            <li><a class="dropdown-item" href="cards.php"><i class="fas fa-credit-card me-2"></i>Cards</a></li>
+                            <li><a class="dropdown-item" href="investments.php"><i class="fas fa-chart-line me-2"></i>Investments</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="digital-banking.php"><i class="fas fa-mobile-alt me-2"></i>Digital Banking</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="businessBankingDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Business Banking
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="businessBankingDropdown">
+                            <li><a class="dropdown-item" href="business-accounts.php"><i class="fas fa-building me-2"></i>Business Accounts</a></li>
+                            <li><a class="dropdown-item" href="trade-finance.php"><i class="fas fa-ship me-2"></i>Trade Finance</a></li>
+                            <li><a class="dropdown-item" href="cash-management.php"><i class="fas fa-money-bill-wave me-2"></i>Cash Management</a></li>
+                            <li><a class="dropdown-item" href="corporate-finance.php"><i class="fas fa-handshake me-2"></i>Corporate Finance</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="aboutDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            About Us
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="aboutDropdown">
+                            <li><a class="dropdown-item" href="about.php"><i class="fas fa-info-circle me-2"></i>Our Story</a></li>
+                            <li><a class="dropdown-item" href="leadership.php"><i class="fas fa-users me-2"></i>Leadership</a></li>
+                            <li><a class="dropdown-item" href="careers.php"><i class="fas fa-briefcase me-2"></i>Careers</a></li>
+                            <li><a class="dropdown-item" href="news.php"><i class="fas fa-newspaper me-2"></i>Newsroom</a></li>
                         </ul>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#about">About Us</a>
+                        <a class="nav-link" href="rates.php">Rates</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#contact">Contact</a>
+                        <a class="nav-link" href="contact.php">Contact</a>
                     </li>
                 </ul>
                 
@@ -76,7 +99,10 @@
                                 <i class="fas fa-user me-1"></i> <?= htmlspecialchars($_SESSION['user_name'] ?? 'User') ?>
                             </button>
                             <ul class="dropdown-menu" aria-labelledby="userDropdown">
-                                <li><a class="dropdown-item" href="#"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
+                                <li><a class="dropdown-item" href="dashboard.php"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
+                                <li><a class="dropdown-item" href="profile.php"><i class="fas fa-user-circle me-2"></i>Profile</a></li>
+                                <li><a class="dropdown-item" href="accounts.php"><i class="fas fa-wallet me-2"></i>Accounts</a></li>
+                                <li><a class="dropdown-item" href="transfers.php"><i class="fas fa-exchange-alt me-2"></i>Transfers</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                             </ul>
@@ -93,9 +119,6 @@
             </div>
         </div>
     </nav>
-
-
-    
 
     <!-- Main Content Wrapper -->
     <main class="main-content">

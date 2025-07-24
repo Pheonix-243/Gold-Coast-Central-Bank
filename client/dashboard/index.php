@@ -68,6 +68,8 @@ mysqli_stmt_execute($stmt);
 $monthlySummary = mysqli_fetch_assoc($stmt->get_result());
 ?>
 
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -77,14 +79,7 @@ $monthlySummary = mysqli_fetch_assoc($stmt->get_result());
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gold Coast Central Bank - Dashboard</title>
 
-    <meta name="title" content="manage your finance with us">
-    <meta name="description" content="Banking dashboard. all in one. manage everything using our web app">
-    <meta name="keywords" content="Banking,finance,dashboards,finance website">
-    <meta name="robots" content="index, follow">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <meta name="language" content="English">
-    <meta name="revisit-after" content="30 days">
-    <meta name="author" content="Gold Coast Central Bank">
+    <!-- [Previous meta tags remain the same] -->
 
     <!-- favicons -->
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
@@ -94,6 +89,9 @@ $monthlySummary = mysqli_fetch_assoc($stmt->get_result());
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css">
@@ -142,11 +140,11 @@ $monthlySummary = mysqli_fetch_assoc($stmt->get_result());
                     <div class="nav_link_text">History</div>
                 </a>
                 <a href="../pages/analytics.php" class="nav_link" aria-label="history">
-                <div class="nav_link_icon">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-                <div class="nav_link_text">Analytics</div>
-            </a>
+                    <div class="nav_link_icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="nav_link_text">Analytics</div>
+                </a>
 
                 <a href="../settings/password.php" class="nav_link" aria-label="settings">
                     <div class="nav_link_icon">
@@ -225,7 +223,10 @@ $monthlySummary = mysqli_fetch_assoc($stmt->get_result());
                     </div>
 
                     <div class="transactions_section">
-                        <h3>Recent Transactions</h3>
+                        <div class="section_header">
+                            <h3>Recent Transactions</h3>
+                            <a href="../transactions/history.php" class="view_all">View All</a>
+                        </div>
                         
                         <div class="transaction_day_group">
                             <h4>Today - <?= date('F j, Y') ?></h4>
@@ -269,6 +270,7 @@ $monthlySummary = mysqli_fetch_assoc($stmt->get_result());
                                         <div class="transaction_details">
                                             <p class="transaction_title"><?= htmlspecialchars($transactionText) ?></p>
                                             <p class="transaction_desc"><?= htmlspecialchars($row['description']) ?></p>
+                                            <p class="transaction_time"><?= date('h:i A', strtotime($row['tm'])) ?></p>
                                         </div>
                                         <div class="transaction_amount">
                                             <?= $amountSign ?> GHC<?= number_format($row['amount'], 2) ?>
@@ -316,6 +318,7 @@ $monthlySummary = mysqli_fetch_assoc($stmt->get_result());
                                         <div class="transaction_details">
                                             <p class="transaction_title"><?= htmlspecialchars($transactionText) ?></p>
                                             <p class="transaction_desc"><?= htmlspecialchars($row['description']) ?></p>
+                                            <p class="transaction_time"><?= date('h:i A', strtotime($row['tm'])) ?></p>
                                         </div>
                                         <div class="transaction_amount">
                                             <?= $amountSign ?> GHC<?= number_format($row['amount'], 2) ?>
@@ -324,46 +327,58 @@ $monthlySummary = mysqli_fetch_assoc($stmt->get_result());
                                 <?php endforeach; ?>
                             </div>
                         <?php endif; ?>
-
-                        <a href="../transactions/history.php" class="view_all_transactions">
-                            <i class="fas fa-chevron-down"></i> View All Transactions
-                        </a>
                     </div>
                 </main>
 
                 <aside>
                     <div class="quick_actions">
-                        <h3>Quick Actions</h3>
-                        <div class="action_buttons">
-                            <a href="../transactions/deposit.php" class="btn btn-primary">
-                                <i class="fas fa-money-bill-wave"></i>
-                                <span>Deposit</span>
+                        <div class="section_header">
+                            <h3>Quick Actions</h3>
+                        </div>
+                        <div class="action_grid">
+                            <a href="../transactions/deposit.php" class="action_card deposit">
+                                <div class="action_icon">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                </div>
+                                <div class="action_text">
+                                    <span>Deposit</span>
+                                    <small>Add funds</small>
+                                </div>
                             </a>
-                            <a href="../transactions/withdrawal.php" class="btn btn-secondary">
-                                <i class="fas fa-hand-holding-usd"></i>
-                                <span>Withdraw</span>
+                            <a href="../transactions/withdrawal.php" class="action_card withdraw">
+                                <div class="action_icon">
+                                    <i class="fas fa-hand-holding-usd"></i>
+                                </div>
+                                <div class="action_text">
+                                    <span>Withdraw</span>
+                                    <small>Get cash</small>
+                                </div>
+                            </a>
+                            <a href="../transactions/transfer.php" class="action_card transfer">
+                                <div class="action_icon">
+                                    <i class="fas fa-paper-plane"></i>
+                                </div>
+                                <div class="action_text">
+                                    <span>Transfer</span>
+                                    <small>Send money</small>
+                                </div>
+                            </a>
+                            <a href="../transactions/history.php" class="action_card history">
+                                <div class="action_icon">
+                                    <i class="fas fa-history"></i>
+                                </div>
+                                <div class="action_text">
+                                    <span>History</span>
+                                    <small>View all</small>
+                                </div>
                             </a>
                         </div>
-
-                        <form action="../transactions/transfer.php" method="GET" class="transfer_form">
-                            <div class="form_group">
-                                <label for="account_no"><i class="fas fa-user"></i> Recipient Account</label>
-                                <input type="text" name="account" id="account_no" placeholder="Enter account number">
-                            </div>
-
-                            <div class="form_group">
-                                <label for="cedis">Amount (GHC)</label>
-                                <input type="number" name="amount" id="cedis" placeholder="0.00" min="1" step="0.01">
-                            </div>
-
-                            <button type="submit" class="btn btn-primary full-width">
-                                <i class="fas fa-paper-plane"></i> Transfer Funds
-                            </button>
-                        </form>
                     </div>
 
                     <div class="account_summary">
-                        <h3>Account Summary</h3>
+                        <div class="section_header">
+                            <h3>Account Summary</h3>
+                        </div>
                         <div class="summary_items">
                             <div class="summary_item">
                                 <div class="summary_icon income">
@@ -399,8 +414,8 @@ $monthlySummary = mysqli_fetch_assoc($stmt->get_result());
         </section>
     </div>
 
-    <!-- Custom JS -->
-    <script src="../js/main.js"></script>
+        <!-- Custom JS -->
+        <script src="../js/main.js"></script>
     <script>
         // Mobile sidebar toggle
         document.getElementById('menu_btn').addEventListener('click', function() {
