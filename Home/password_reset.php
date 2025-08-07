@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             // Prevent email enumeration
             $message = "If your email exists, you'll receive an OTP shortly.";
-            sleep(1); // Prevent timing attacks
+            // sleep(1); 
         }
     }
 }

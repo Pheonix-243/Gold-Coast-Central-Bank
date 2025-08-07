@@ -14,7 +14,7 @@
     --danger-red: #DC3545;
     --warning-orange: #FFC107;
     --light-navy: rgba(27, 54, 93, 0.8);
-    --cl: radial-gradient(ellipse farthest-corner at right bottom, #7e6a12 0%, #FDB931 8%, #9f7928 30%, #8A6E2F 40%, transparent 80%),radial-gradient(ellipse farthest-corner at left top, #5d4a1f 0%, #5d4a1f 8%, #D1B464 25%, #5d4a1f 62.5%, #5d4a1f 100%);
+    --cl: radial-gradient(ellipse farthest-corner at right bottom, #7e6a12 0%, #FDB931 8%, #9f7928 30%, #8A6E2F 40%, transparent 80%), radial-gradient(ellipse farthest-corner at left top, #5d4a1f 0%, #5d4a1f 8%, #D1B464 25%, #5d4a1f 62.5%, #5d4a1f 100%);
 }
 
 /* Global Styles */
@@ -31,7 +31,12 @@ body {
     background-color: #f9f9f9;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
     font-family: 'Playfair Display', serif;
     font-weight: 600;
     line-height: 1.2;
@@ -298,7 +303,8 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Main Content Wrapper */
 .main-content {
-    margin-top: 76px; /* Account for fixed navbar */
+    margin-top: 76px;
+    /* Account for fixed navbar */
     min-height: calc(100vh - 76px);
 }
 
@@ -415,7 +421,7 @@ h1, h2, h3, h4, h5, h6 {
     padding: 2rem 1rem;
     background: var(--white);
     border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
     transition: transform 0.3s ease;
 }
 
@@ -440,19 +446,20 @@ h1, h2, h3, h4, h5, h6 {
 .service-section {
     background-image: linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%);
 }
+
 .service-card {
     background: var(--white);
     border-radius: 15px;
     padding: 2.5rem 2rem;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
     transition: all 0.3s ease;
     height: 100%;
-    border: 1px solid rgba(0,0,0,0.05);
+    border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .service-card:hover {
     transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
 }
 
 .service-icon {
@@ -517,7 +524,7 @@ h1, h2, h3, h4, h5, h6 {
     background: var(--white);
     border-radius: 15px;
     padding: 2rem;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
     margin: 1rem 0;
     position: relative;
 }
@@ -574,7 +581,7 @@ h1, h2, h3, h4, h5, h6 {
     background: var(--white);
     border-radius: 15px;
     padding: 3rem;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
 .form-control {
@@ -622,7 +629,8 @@ h1, h2, h3, h4, h5, h6 {
     border-top: 3px solid var(--primary-gold);
 }
 
-.footer h5, .footer h6 {
+.footer h5,
+.footer h6 {
     color: var(--primary-gold) !important;
 }
 
@@ -654,7 +662,7 @@ h1, h2, h3, h4, h5, h6 {
 .auth-card {
     background: var(--white);
     border-radius: 20px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     overflow: hidden;
     max-width: 1000px;
     margin: 2rem auto;
@@ -732,25 +740,25 @@ h1, h2, h3, h4, h5, h6 {
     .hero h1 {
         font-size: 2.5rem;
     }
-    
+
     .section {
         padding: 3rem 0;
     }
-    
+
     .section-title {
         font-size: 2rem;
     }
-    
+
     .auth-card {
         margin: 1rem;
         border-radius: 15px;
     }
-    
+
     .auth-form-section,
     .auth-brand {
         padding: 2rem;
     }
-    
+
     .contact-form {
         padding: 2rem;
     }
@@ -760,13 +768,13 @@ h1, h2, h3, h4, h5, h6 {
     .hero h1 {
         font-size: 2rem;
     }
-    
+
     .hero .btn {
         display: block;
         width: 100%;
         margin: 0.5rem 0;
     }
-    
+
     .service-card,
     .testimonial-card {
         padding: 1.5rem;
@@ -955,9 +963,17 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @keyframes progressSlide {
-    0% { width: 0%; }
-    50% { width: 70%; }
-    100% { width: 100%; }
+    0% {
+        width: 0%;
+    }
+
+    50% {
+        width: 70%;
+    }
+
+    100% {
+        width: 100%;
+    }
 }
 
 /* Premium Badge Styles */

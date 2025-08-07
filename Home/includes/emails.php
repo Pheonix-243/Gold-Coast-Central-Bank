@@ -68,6 +68,116 @@ class SecureEmailService {
         }
     }
     
+    public function sendLoginNotification($email, $ip, $userAgent, $location = null) {
+        try {
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                throw new Exception("Invalid email address");
+            }
+            
+            $mail = new PHPMailer(true);
+            $mail->isSMTP();
+            $mail->Host = "smtp.gmail.com";
+            $mail->Port = 465;
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+            $mail->SMTPAuth = true;
+            $mail->Username = "myphp0068@gmail.com";
+            $mail->Password = "bbenmzofviglbmzb";
+            $mail->setFrom("myphp0068@gmail.com", "Gold Coast Central Bank");
+            $mail->addAddress($email);
+            
+            $subject = "New Login Detected";
+            $body = $this->getLoginNotificationBody($ip, $userAgent, $location);
+            $plainBody = $this->getLoginNotificationBodyPlain($ip, $userAgent, $location);
+            
+            $mail->isHTML(true);
+            $mail->Subject = $subject;
+            $mail->Body = $body;
+            $mail->AltBody = $plainBody;
+            
+            $mail->send();
+            
+            $this->logger->logEvent('login_notification_sent', [
+                'email' => $email,
+                'ip' => $ip
+            ]);
+            
+            return true;
+        } catch (Exception $e) {
+            $this->logger->logEvent('login_notification_failed', [
+                'email' => $email,
+                'error' => $e->getMessage()
+            ], 'ERROR');
+            return false;
+        }
+    }
+    
+    private function getLoginNotificationBody($ip, $userAgent, $location) {
+        $time = date('D, d M Y H:i:s O');
+        $locationText = $location ? "{$location['city']}, {$location['country']}" : "Unknown location";
+        
+        return "
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset='UTF-8'>
+            <title>New Login Detected</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
+                .container { max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                .header { text-align: center; border-bottom: 2px solid #1e40af; padding-bottom: 20px; margin-bottom: 30px; }
+                .logo { color: #1e40af; font-size: 24px; font-weight: bold; }
+                .info-box { background-color: #f8fafc; border: 1px solid #e5e7eb; padding: 20px; margin: 20px 0; border-radius: 8px; }
+                .warning { background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 15px; margin: 20px 0; }
+                .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px; }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <div class='header'>
+                    <div class='logo'>Gold Coast Central Bank</div>
+                </div>
+                
+                <h2>New Login Detected</h2>
+                <p>Hello,</p>
+                <p>This is a routine security alert. Someone logged into your account from a new IP address:</p>
+                
+                <div class='info-box'>
+                    <p><strong>Time:</strong> {$time}</p>
+                    <p><strong>IP address:</strong> {$ip}</p>
+                    <p><strong>Location:</strong> {$locationText}</p>
+                    <p><strong>Browser:</strong> {$userAgent}</p>
+                </div>
+                
+                <div class='warning'>
+                    <strong>Security Notice:</strong> If this wasn't you, please change your password immediately and contact our security team.
+                </div>
+                
+                <p>You're receiving this email to help keep your account secure.</p>
+                
+                <div class='footer'>
+                    <p>Gold Coast Central Bank - Secure Banking Solutions</p>
+                    <p>This is an automated message. Please do not reply to this email.</p>
+                </div>
+            </div>
+        </body>
+        </html>";
+    }
+    
+    private function getLoginNotificationBodyPlain($ip, $userAgent, $location) {
+        $time = date('D, d M Y H:i:s O');
+        $locationText = $location ? "{$location['city']}, {$location['country']}" : "Unknown location";
+        
+        return "Gold Coast Central Bank\n\n" .
+               "New Login Detected\n\n" .
+               "This is a routine security alert. Someone logged into your account from a new IP address:\n\n" .
+               "Time: {$time}\n" .
+               "IP address: {$ip}\n" .
+               "Location: {$locationText}\n" .
+               "Browser: {$userAgent}\n\n" .
+               "SECURITY NOTICE: If this wasn't you, please change your password immediately.\n\n" .
+               "Gold Coast Central Bank - Secure Banking Solutions";
+    }
+
     private function getOTPSubject($action) {
         $subjects = [
             'login_verification' => 'Your Login Verification Code',

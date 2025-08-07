@@ -8,30 +8,57 @@
     <link rel="preload" href="./assets/images/pic1.jpg" as="image" fetchpriority="high">
     
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Montserrat', Arial, sans-serif;
-            overflow-x: hidden;
+        /* ===== RESET & BASE STYLES ===== */
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
         }
+        
+        body {
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+            overflow-x: hidden;
+            line-height: 1.6;
+            font-weight: 400;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* ===== HERO SLIDER CONTAINER ===== */
         .hero-slider {
-            background: linear-gradient(120deg, #232526 0%, #414345 100%);
+            background: linear-gradient(135deg, #0f1419 0%, #1a2332 50%, #2c3e50 100%);
             position: relative;
             width: 100%;
             height: 95vh;
             min-height: 600px;
             max-height: 1200px;
             overflow: hidden;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05);
             margin: 0;
             margin-top: -8px;
         }
+        
+        .hero-slider::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at center, rgba(255,255,255,0.02) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        
         .hero-slider .slider-track {
             display: flex;
             height: 100%;
             width: 100%;
-            transition: transform 1800ms cubic-bezier(0.16, 0.77, 0.22, 0.99);
+            transition: transform 1400ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
             will-change: transform;
         }
+        
+        /* ===== SLIDE STYLES ===== */
         .hero-slider .slide {
             min-width: 100%;
             height: 100%;
@@ -39,101 +66,188 @@
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            flex-shrink: 0;
-            overflow: hidden;
-            filter: brightness(0.7);
-            transition: filter 1600ms cubic-bezier(0.16, 0.77, 0.22, 0.99);
-            will-change: transform, filter;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 0 8%;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
+        
+        .hero-slider .slide::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, 
+                rgba(15, 32, 60, 0.9) 0%, 
+                rgba(25, 45, 75, 0.8) 30%,
+                rgba(35, 55, 85, 0.75) 60%,
+                rgba(45, 65, 95, 0.7) 100%);
+            z-index: 1;
+        }
+        
+        .hero-slider .slide::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at 30% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+            z-index: 2;
+        }
+        
+        .hero-slider .slide .btn:hover::before {
+            left: 100%;
+        }
+        
+        .hero-slider .slide-content .btn:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 
+                0 16px 45px rgba(37, 99, 235, 0.5),
+                0 6px 20px rgba(0, 0, 0, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1e40af 100%);
+        }
+        
+        .hero-slider .dot.active {
+            background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
+            transform: scale(1.15);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.6), 0 0 5px rgba(255, 255, 255, 0.3);
+        }
+        
+        .hero-slider .dot.active::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.1); }
+        }
+        
         .hero-slider .slide.loaded {
             filter: brightness(0.92) saturate(1.1);
         }
+        
         .hero-slider .slide.active {
             filter: brightness(1) saturate(1.2) drop-shadow(0 0 40px #fff2);
         }
+        
+        /* ===== SLIDE CONTENT ===== */
         .hero-slider .slide-content {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%) scale(0.98);
-            width: 90%; max-width: 1200px;
-            text-align: center;
-            color: #fff;
-            z-index: 2;
+            position: relative;
+            z-index: 3;
+            max-width: 700px;
+            color: white;
+            text-align: left;
             opacity: 0;
-            filter: blur(8px);
-            transition: 
-                opacity 1400ms cubic-bezier(0.16, 0.77, 0.22, 0.99) 400ms,
-                filter 1400ms cubic-bezier(0.16, 0.77, 0.22, 0.99) 400ms,
-                transform 1400ms cubic-bezier(0.16, 0.77, 0.22, 0.99) 400ms;
-            will-change: opacity, filter, transform;
+            transform: translateY(50px) scale(0.98);
+            transition: all 1000ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
+        
         .hero-slider .slide.active .slide-content {
             opacity: 1;
-            filter: blur(0);
-            transform: translate(-50%, -50%) scale(1.04);
+            transform: translateY(0) scale(1);
         }
-        .hero-slider .slide h1 {
-            font-size: clamp(2.5rem, 6vw, 4.5rem);
-            margin-bottom: 1.2rem;
-            font-weight: 900;
-            letter-spacing: 0.03em;
-            text-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 1px 0 #fff3;
-            background: linear-gradient(90deg, #4a6ee0 30%, #00e0ff 100%);
+        
+        .hero-slider .slide-content h4 {
+            font-size: clamp(2.8rem, 5.5vw, 5rem);
+            font-weight: 800;
+            line-height: 1.05;
+            margin-bottom: 2rem;
+            text-shadow: 0 6px 30px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.3);
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
         }
+        
+        .hero-slider .slide-content h4::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 100%);
+            border-radius: 2px;
+        }
+        
         .hero-slider .slide p {
-            font-size: clamp(1.1rem, 2.2vw, 1.6rem);
-            margin-bottom: 2.2rem;
-            max-width: 700px;
-            margin-left: auto;
-            margin-right: auto;
-            text-shadow: 0 2px 8px rgba(0,0,0,0.25);
-            color: #eaf6ff;
+            font-size: clamp(1.05rem, 2.1vw, 1.3rem);
+            font-weight: 400;
+            line-height: 1.65;
+            margin-bottom: 42px;
+            color: rgba(255, 255, 255, 0.95);
+            text-shadow: 0 2px 12px rgba(0,0,0,0.5);
+            max-width: 580px;
+            letter-spacing: 0.01em;
+            opacity: 0.95;
         }
+        
+        /* ===== BUTTON STYLES ===== */
         .hero-slider .slide-content .btn {
             display: inline-block;
-            padding: 14px 38px;
-            background: linear-gradient(90deg, #4a6ee0 0%, #00e0ff 100%);
-            color: #fff;
+            padding: 18px 36px;
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 50%, #1e3a8a 100%);
+            color: white;
             text-decoration: none;
-            border-radius: 32px;
-            font-weight: 700;
+            border-radius: 12px;
+            font-weight: 600;
             font-size: 1.1rem;
-            letter-spacing: 0.04em;
-            box-shadow: 0 4px 24px #00e0ff33;
-            transition: all 0.35s cubic-bezier(0.16, 0.77, 0.22, 0.99), box-shadow 0.5s cubic-bezier(0.16, 0.77, 0.22, 0.99);
+            letter-spacing: 0.3px;
+            transition: all 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-shadow: 
+                0 12px 35px rgba(37, 99, 235, 0.4),
+                0 4px 15px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255,255,255,0.12);
+            backdrop-filter: blur(15px);
             position: relative;
             overflow: hidden;
         }
-        .hero-slider .slide-content .btn::before {
+        
+        .hero-slider .slide .btn::before {
             content: '';
             position: absolute;
-            left: -75%; top: 0; width: 50%; height: 100%;
-            background: linear-gradient(120deg, #fff8 0%, #fff0 100%);
-            transform: skewX(-20deg);
-            transition: left 0.7s cubic-bezier(0.16, 0.77, 0.22, 0.99);
-            z-index: 1;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            transition: left 500ms ease;
         }
-        .hero-slider .slide-content .btn:hover {
-            background: linear-gradient(90deg, #00e0ff 0%, #4a6ee0 100%);
-            box-shadow: 0 8px 32px #00e0ff66;
-            transform: translateY(-2px) scale(1.04);
-        }
-        .hero-slider .slide-content .btn:hover::before {
-            left: 120%;
-        }
-        /* Navigation Dots */
+        
+        /* ===== NAVIGATION DOTS ===== */
         .hero-slider .slider-dots {
             position: absolute;
-            bottom: 38px;
+            bottom: 42px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 18px;
+            gap: 14px;
             z-index: 10;
+            padding: 14px 24px;
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
         }
-       .hero-slider .dot {
+        
+        .hero-slider .dot {
             width: 16px; height: 16px;
             border-radius: 50%;
             background: rgba(255,255,255,0.45);
@@ -143,57 +257,43 @@
             position: relative;
             will-change: transform, background;
         }
-        .hero-slider .dot.active {
-            background: linear-gradient(90deg, #4a6ee0 0%, #00e0ff 100%);
-            transform: scale(1.25);
-            box-shadow: 0 4px 16px #00e0ff55;
-        }
-        .hero-slider .dot.active::after {
-            content: '';
-            position: absolute;
-            left: 50%; top: 50%;
-            transform: translate(-50%, -50%);
-            width: 28px; height: 28px;
-            border-radius: 50%;
-            border: 2px solid #00e0ff55;
-            opacity: 0.5;
-            animation: pulseDot 1.8s infinite cubic-bezier(0.16, 0.77, 0.22, 0.99);
-        }
-        @keyframes pulseDot {
-            0% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
-            60% { transform: translate(-50%, -50%) scale(1.3); opacity: 0.15; }
-            100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
-        }
-        /* Arrows */
+        
+        /* ===== ARROWS ===== */
         .hero-slider .slider-arrow {
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
-            width: 54px; height: 54px;
-            background: rgba(0,0,0,0.18);
-            border: none;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: white;
+            font-size: 26px;
+            width: 65px;
+            height: 65px;
             border-radius: 50%;
-            color: #fff;
-            font-size: 2.2rem;
             cursor: pointer;
-            z-index: 20;
+            transition: all 350ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            z-index: 10;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.4s cubic-bezier(0.16, 0.77, 0.22, 0.99);
-            box-shadow: 0 2px 12px #0002;
-            will-change: transform, background;
+            opacity: 0.75;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            /* display: none; */
         }
+        
         .hero-slider .slider-arrow:hover {
-            background: linear-gradient(120deg, #4a6ee0 0%, #00e0ff 100%);
-            color: #fff;
-            box-shadow: 0 4px 24px #00e0ff44;
+            background: rgba(255, 255, 255, 0.15);
             transform: translateY(-50%) scale(1.08);
+            opacity: 1;
+            box-shadow: 0 12px 35px rgba(0,0,0,0.35);
+            border-color: rgba(255, 255, 255, 0.25);
         }
+        
         .hero-slider .slider-arrow.left { left: 32px; }
         .hero-slider .slider-arrow.right { right: 32px; }
         
-        /* Responsive adjustments - UPDATED FOR BETTER MOBILE DISPLAY */
+        /* ===== RESPONSIVE STYLES ===== */
         @media (max-width: 1200px) {
             .hero-slider {
                 height: 85vh;
@@ -254,7 +354,7 @@
                 top: 45%;
                 width: 90%;
             }
-            .hero-slider .slide h1 {
+            .hero-slider .slide h4 {
                 font-size: 1.8rem;
                 margin-bottom: 0.8rem;
             }
@@ -282,7 +382,7 @@
                 top: 45%;
                 width: 90%;
             }
-            .hero-slider .slide h1 {
+            .hero-slider .slide h4 {
                 font-size: 1.6rem;
             }
             .hero-slider .slide p {
@@ -302,7 +402,7 @@
         <!-- Slide 1 -->
         <div class="slide active" style="background-image: url('./assets/images/pic1.jpg')" data-index="0">
             <div class="slide-content">
-                <h1>Premium Banking Solutions</h1>
+                <h4>Premium Banking<br> Solutions</h4>
                 <p>Experience world-class financial services with our award-winning digital platform</p>
                 <a href="#" class="btn">Get Started</a>
             </div>
@@ -310,15 +410,15 @@
         <!-- Slide 2 -->
         <div class="slide" style="background-image: url('./assets/images/pic2.jpg')" data-index="1">
             <div class="slide-content">
-                <h1>Global Investment Opportunities</h1>
+                <h4>Global Investment<br> Opportunities</h4>
                 <p>Grow your wealth with our expert portfolio management and investment strategies</p>
                 <a href="#" class="btn">Explore Investments</a>
             </div>
         </div>
         <!-- Slide 3 -->
-        <div class="slide" style="background-image: url('./assets/images/pic3.jpg')" data-index="2">
+        <div class="slide" style="background-image: url('./assets/images/hm.png')" data-index="2">
             <div class="slide-content">
-                <h1>Innovative Digital Banking</h1>
+                <h4>Innovative Digital<br> Banking</h4>
                 <p>Bank anytime, anywhere with our secure and intuitive mobile banking app</p>
                 <a href="#" class="btn">Download App</a>
             </div>
@@ -326,7 +426,7 @@
         <!-- Slide 4 -->
         <div class="slide" style="background-image: url('./assets/images/pic4b.jpg')" data-index="3">
             <div class="slide-content">
-                <h1>Bank Anywhere, Anytime</h1>
+                <h4>Bank Anywhere,<br> Anytime</h4>
                 <p>With our intuitive mobile app, your bank fits right in your pocket — fast, safe, and seamless.</p>
                 <a href="#" class="btn">Download App</a>
             </div>
@@ -334,7 +434,7 @@
         <!-- Slide 5 -->
         <div class="slide" style="background-image: url('./assets/images/pic5.webp')" data-index="4">
             <div class="slide-content">
-                <h1>Bulletproof Security</h1>
+                <h4>Bulletproof Security</h4>
                 <p>We guard your data with top-tier encryption, AI fraud detection, and 24/7 monitoring.</p>
                 <a href="#" class="btn">Our Security</a>
             </div>
@@ -342,7 +442,7 @@
         <!-- Slide 6 -->
         <div class="slide" style="background-image: url('./assets/images/pic0.jpeg')" data-index="5">
             <div class="slide-content">
-                <h1>Human-Centered Support</h1>
+                <h4>Human-Centered<br> Support</h4>
                 <p>Talk to real people who care. No bots, no runaround — just help when you need it.</p>
                 <a href="#" class="btn">Talk to Us</a>
             </div>
@@ -350,7 +450,7 @@
         <!-- Slide 7 -->
         <div class="slide" style="background-image: url('./assets/images/pic7.webp')" data-index="6">
             <div class="slide-content">
-                <h1>Future-Ready Technology</h1>
+                <h4>Future-Ready<br> Technology</h4>
                 <p>Our systems evolve with your needs, integrating blockchain, AI, and next-gen APIs.</p>
                 <a href="#" class="btn">Tech Overview</a>
             </div>
@@ -358,15 +458,16 @@
         <!-- Slide 8 -->
         <div class="slide" style="background-image: url('./assets/images/pic8b.jpg')" data-index="7">
             <div class="slide-content">
-                <h1>For Entrepreneurs & Innovators</h1>
+                <h4>For Entrepreneurs<br>&amp; Innovators</h4>
                 <p>Launch, grow, and scale your business with tailored banking built for modern hustlers.</p>
                 <a href="#" class="btn">Business Banking</a>
             </div>
         </div>
         <!-- Slide 9 -->
-        <div class="slide" style="background-image: url('./assets/images/pic9.jpg')" data-index="8">
-            <div class="slide-content">
-                <h1>Fast International Transfers</h1>
+        <!-- <div class="slide" style="background-image: url('./assets/images/pic9.jpg')" data-index="8"> -->
+        <div class="slide" style="background-image: url('./assets/images/download.png')" data-index="8">
+        <div class="slide-content">
+                <h4>Fast International<br> Transfers</h4>
                 <p>Send money across borders in seconds with live exchange rates and transparent fees.</p>
                 <a href="#" class="btn">Send Money</a>
             </div>
@@ -374,7 +475,7 @@
         <!-- Slide 10 -->
         <div class="slide" style="background-image: url('./assets/images/pic13.jpg')" data-index="9">
             <div class="slide-content">
-                <h1>Smart Credit Solutions</h1>
+                <h4>Smart Credit Solutions</h4>
                 <p>Flexible credit lines and intelligent spending tools — built to help you thrive, not just survive.</p>
                 <a href="#" class="btn">View Credit Options</a>
             </div>
@@ -382,7 +483,7 @@
         <!-- Slide 11 -->
         <div class="slide" style="background-image: url('./assets/images/pic12.png')" data-index="10">
             <div class="slide-content">
-                <h1>Banking That Matches Your Lifestyle</h1>
+                <h4>Banking<br> That Matches Your<br> Lifestyle</h4>
                 <p>Whether you're a jetsetter or a homebody, our personalized services meet your rhythm.</p>
                 <a href="#" class="btn">Discover More</a>
             </div>
@@ -390,7 +491,7 @@
         <!-- Slide 1 (clone for infinite loop) -->
         <div class="slide" style="background-image: url('./assets/images/pic1.jpg')" data-index="0">
             <div class="slide-content">
-                <h1>Premium Banking Solutions</h1>
+                <h4>Premium Banking Solutions</h4>
                 <p>Experience world-class financial services with our award-winning digital platform</p>
                 <a href="#" class="btn">Get Started</a>
             </div>
@@ -412,13 +513,15 @@
     </div>
 </div>
 
-<!-- Your JavaScript remains exactly the same -->
+<!-- Enhanced JavaScript with Mouse Parallax -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // ===== SLIDER ELEMENTS =====
     const sliderTrack = document.querySelector('.slider-track');
     const slides = document.querySelectorAll('.slide');
     const dots = document.querySelectorAll('.dot');
     const leftArrow = document.querySelector('.slider-arrow.left');
+    const heroSlider = document.querySelector('.hero-slider');
     const rightArrow = document.querySelector('.slider-arrow.right');
     const buttons = document.querySelectorAll('.btn');
     let currentIndex = 0;
@@ -559,6 +662,30 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // ===== MOUSE PARALLAX EFFECT =====
+    let mouseX = 0, mouseY = 0;
+    
+    heroSlider.addEventListener('mousemove', function(e) {
+        const rect = heroSlider.getBoundingClientRect();
+        mouseX = (e.clientX - rect.left - rect.width / 2) / rect.width;
+        mouseY = (e.clientY - rect.top - rect.height / 2) / rect.height;
+        
+        const activeSlide = document.querySelector('.slide.active');
+        if (activeSlide) {
+            const moveX = mouseX * 8; // Subtle 8px max movement
+            const moveY = mouseY * 8;
+            activeSlide.style.transform = `translate(${moveX}px, ${moveY}px) scale(1.02)`;
+        }
+    });
+    
+    heroSlider.addEventListener('mouseleave', function() {
+        const activeSlide = document.querySelector('.slide.active');
+        if (activeSlide) {
+            activeSlide.style.transform = 'translate(0, 0) scale(1)';
+        }
+    });
+    
+    // ===== AUTO SLIDE FUNCTIONALITY =====
     function startAutoSlide() {
         clearInterval(autoSlideInterval);
         autoSlideInterval = setInterval(() => {

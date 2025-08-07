@@ -63,6 +63,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['verify_otp'])) {
                         // Clear OTP context after successful verification
                         $otpSystem->clearOTPContext();
                         
+
+
+
                         // Redirect to dashboard immediately
                         header('Location: /gccb/client/dashboard/index.php');
                         exit;

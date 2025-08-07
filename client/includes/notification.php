@@ -1,6 +1,6 @@
 <?php
 require_once('conn.php');
-require_once 'email.php';
+require_once '../../Home/includes/email.php';
 
 class NotificationSystem {
     private $con;

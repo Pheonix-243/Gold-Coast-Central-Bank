@@ -1,10 +1,9 @@
 <?php
-use PHPMailer\PHPMailer\PHPMailer;
-require_once 'phpmailer/Exception.php';
-require_once 'phpmailer/PHPMailer.php';
-require_once 'phpmailer/SMTP.php';
+require_once 'vendor/autoload.php';
 
-function email_send($address, $header, $msg)
+if (!function_exists('email_send')) {
+    function email_send() {
+        function email_send($address, $header, $msg)
 {
     $mail = new PHPMailer(true); 
     $mail->isSMTP();
@@ -24,6 +23,9 @@ function email_send($address, $header, $msg)
         echo 'Message has been sent.';
     } catch (Exception $e) {
         echo 'Message was not sent. Mailer Error: ' . $mail->ErrorInfo;
+    }
+}
+
     }
 }
 ?>

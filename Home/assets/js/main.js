@@ -207,3 +207,16 @@ window.GCCBank = {
   formatPhoneNumber,
   showPremiumLoadingScreen,
 };
+
+// Set screen data cookie for fingerprinting
+document.addEventListener("DOMContentLoaded", function () {
+  const screenData =
+    window.screen.width +
+    "x" +
+    window.screen.height +
+    "x" +
+    window.screen.colorDepth;
+  document.cookie = `screen_data=${screenData}; path=/; max-age=${
+    60 * 60 * 24 * 30
+  }`; // 30 days
+});

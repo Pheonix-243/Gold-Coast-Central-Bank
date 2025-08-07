@@ -3,11 +3,14 @@ session_start();
 require_once 'config/database.php';
 require_once 'includes/otp.php';
 require_once 'includes/security_logger.php';
+require_once 'includes/device_intelligence.php';
+require_once 'includes/notification.php';
+require_once 'includes/location_service.php';
+require_once('includes/conn.php');
 
-// Initialize security logger
+// Initialize services
 $logger = new SecurityLogger();
-
-// Page title for header
+$deviceIntel = new DeviceIntelligence();
 $page_title = 'Secure Login';
 
 // Already logged in? Redirect.
@@ -35,9 +38,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'ip' => $_SERVER['REMOTE_ADDR']
         ], 'WARNING');
     } else {
-        // Enhanced database query with security checks
         $conn = DatabaseConnection::getInstance()->getConnection();
-        $sql = "SELECT a.account, a.balance, a.status, a.password,
+        $sql = "SELECT a.account, a.balance, a.status, a.password, a.two_factor_enabled,
                        h.name, h.email, h.image
                 FROM accounts_info a
                 JOIN accountsholder h ON a.account = h.account
@@ -63,67 +65,130 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'account' => $client['account']
                     ], 'WARNING');
                 } elseif (password_verify($password, $client['password'])) {
-                    // Password correct - initiate OTP verification
-                    $otpSystem = new EnhancedOTPSystem();
-                    
-                    // Store login data in session temporarily
-                    $_SESSION['pending_login'] = [
-                        'account' => $client['account'],
-                        'name' => $client['name'],
-                        'email' => $client['email'],
-                        'balance' => $client['balance'],
-                        'image' => $client['image'],
-                        'remember_me' => $rememberMe
-                    ];
-                    
-                    // Generate and send OTP
-                    $result = $otpSystem->generateAndSendOTP($client['email'], 'login_verification');
-                    
-                    if ($result['status'] === 'success') {
-                        $logger->logEvent('login_otp_sent', [
-                            'email' => $client['email'],
-                            'account' => $client['account']
-                        ]);
+    // Password correct - check if we need OTP
+    $deviceData = $deviceIntel->getDeviceFingerprint();
+    $requireOTP = $deviceIntel->shouldTriggerOTP($client['account'], $deviceData);
+
+    // Record device (even if we don't require OTP)
+    $deviceIntel->recordDevice($client['account'], $deviceData);
+
+    // Get location information
+    $locationService = new LocationService(); // Add your IPInfo.io token if you have one
+    $location = $locationService->getLocationFromIP($_SERVER['REMOTE_ADDR']);
+
+    if ($requireOTP) {
+                        // Initiate OTP verification
+                        $otpSystem = new EnhancedOTPSystem();
                         
-                        header('Location: includes/otp_verification.php');
-                        exit;
-                    } else {
-                        $error = "Failed to send verification code: " . $result['message'];
-                        unset($_SESSION['pending_login']);
-                        $logger->logEvent('login_otp_failed', [
+                        // Store login data in session temporarily
+                        $_SESSION['pending_login'] = [
+                            'account' => $client['account'],
+                            'name' => $client['name'],
                             'email' => $client['email'],
-                            'error' => $result['message']
-                        ], 'ERROR');
-                    }
-                    
-                } else {
+                            'balance' => $client['balance'],
+                            'image' => $client['image'],
+                            'remember_me' => $rememberMe,
+                            'device_data' => $deviceData
+                        ];
+                        
+                        // Generate and send OTP
+                        $result = $otpSystem->generateAndSendOTP($client['email'], 'login_verification');
+                        
+                        if ($result['status'] === 'success') {
+                            $logger->logEvent('login_otp_sent', [
+                                'email' => $client['email'],
+                                'account' => $client['account'],
+                                'reason' => $requireOTP
+                            ]);
+                            
+                            header('Location: includes/otp_verification.php');
+                            exit;
+                        } else {
+                            $error = "Failed to send verification code: " . $result['message'];
+                            unset($_SESSION['pending_login']);
+                            $logger->logEvent('login_otp_failed', [
+                                'email' => $client['email'],
+                                'error' => $result['message']
+                            ], 'ERROR');
+                        }
+                    }  else {
+        // Complete login
+        $_SESSION['client_loggedin'] = true;
+        $_SESSION['client_account'] = $client['account'];
+        $_SESSION['client_name'] = $client['name'];
+        $_SESSION['client_email'] = $client['email'];
+        $_SESSION['client_balance'] = $client['balance'];
+        $_SESSION['client_image'] = $client['image'];
+        
+        // Log login
+        $ip = $_SERVER['REMOTE_ADDR'];
+        $loginTime = date('Y-m-d H:i:s');
+        $stmt = $conn->prepare("
+            INSERT INTO client_login_history (account, login_time, ip_address) 
+            VALUES (?, ?, ?)
+        ");
+        $stmt->execute([$_SESSION['client_account'], $loginTime, $ip]);
+        $_SESSION['login_id'] = $conn->lastInsertId();
+
+        // Send login notification email
+        $emailService = new SecureEmailService();
+        $emailService->sendLoginNotification(
+            $client['email'],
+            $ip,
+            $_SERVER['HTTP_USER_AGENT'],
+            $location
+        );
+
+        // Send in-app notification
+        try {
+            $notification = new NotificationSystem($con);
+            $notification->sendNotification(
+                $_SESSION['client_account'],
+                'login',
+                'New Login Detected',
+                "Your account was accessed from " . $ip . " on " . date('Y-m-d H:i:s'),
+                [
+                    'ip' => $ip,
+                    'device' => $_SERVER['HTTP_USER_AGENT'],
+                    'location' => $location
+                ],
+                false, // Don't
+                false // Not deletable
+            );
+        } catch (Exception $e) {
+            error_log("Notification error: " . $e->getMessage());
+        }
+        
+        header('Location: /gccb/client/dashboard/index.php');
+        exit;
+    }
+} else {
                     // Invalid password
                     $error = "Invalid email or password.";
                     
                     // Log failed attempt
                     $logger->logEvent('login_failed', [
                         'email' => $email,
-                        'reason' => 'invalid_password'
+                        'account' => $client['account'] ?? 'unknown',
+                        'reason' => 'invalid_password',
+                        'ip' => $_SERVER['REMOTE_ADDR']
                     ], 'WARNING');
-                    
-                    // Increment failed attempts counter
-                    $stmt = $conn->prepare("INSERT INTO security_logs (event_type, ip_address, data, created_at) VALUES ('login_failed', ?, ?, NOW())");
-                    $logData = json_encode(['email' => $email, 'reason' => 'invalid_password']);
-                    $stmt->execute([$_SERVER['REMOTE_ADDR'], $logData]);
                 }
             } else {
                 // User not found
                 $error = "Invalid email or password.";
                 $logger->logEvent('login_failed', [
                     'email' => $email,
-                    'reason' => 'user_not_found'
+                    'reason' => 'user_not_found',
+                    'ip' => $_SERVER['REMOTE_ADDR']
                 ], 'WARNING');
             }
         }
     }
 }
-?>
 
+
+?>
 <!-- HTML Starts here -->
 <?php include 'includes/header.php'; ?>
 

@@ -69,7 +69,6 @@ $monthlySummary = mysqli_fetch_assoc($stmt->get_result());
 ?>
 
 
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -77,27 +76,35 @@ $monthlySummary = mysqli_fetch_assoc($stmt->get_result());
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gold Coast Central Bank - Dashboard</title>
-
-    <!-- [Previous meta tags remain the same] -->
-
-    <!-- favicons -->
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="manifest" href="/site.webmanifest">
-
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-    <!-- Custom CSS -->
+    <title>Gold Coast Central Bank - Premium Dashboard</title>
+    
+    <meta name="description" content="Premium banking dashboard for Gold Coast Central Bank clients">
+    <meta name="theme-color" content="#0f172a">
+    
+    <!-- Favicons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="manifest" href="site.webmanifest">
+    
+    <!-- Preload critical fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Font Awesome Pro -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts - Inter with optimized loading -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js for premium analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom Premium CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
+<body class="premium-dashboard">
     <div class="container">
         <nav class="sidebar" id="sidebar">
             <button id="btn_close">
@@ -195,31 +202,176 @@ $monthlySummary = mysqli_fetch_assoc($stmt->get_result());
 
             <section class="content_section">
                 <main>
-                    <div class="balance_card">
-                        <div class="balance_header">
-                            <span>Your Balance</span>
-                            <span><?= htmlspecialchars($accountInfo['account_type'] ?? 'Account') ?></span>
+                    <!-- Premium Balance Card with Enhanced Design -->
+                    <div class="premium-balance-card">
+                        <div class="balance-card-header">
+                            <div class="balance-info">
+                                <h2 class="balance-title">Available Balance</h2>
+                                <p class="account-type"><?= htmlspecialchars($accountInfo['account_type'] ?? 'Premium Account') ?></p>
+                            </div>
+                            <div class="balance-actions">
+                                <button class="balance-visibility-btn" aria-label="toggle balance visibility">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <div class="balance-menu">
+                                    <button class="menu-trigger">
+                                        <i class="fas fa-ellipsis-h"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="balance_amount">
-                            GHC<?= number_format($_SESSION['client_balance'], 2) ?>
+
+                        
+                        <div class="balance-amount-section">
+                            <div class="main-balance">
+                                <span class="currency">GHC</span>
+                                <span class="amount" data-balance="<?= $_SESSION['client_balance'] ?>"><?= number_format($_SESSION['client_balance'], 2) ?></span>
+                            </div>
+                            <div class="balance-change">
+                                <span class="change-indicator positive">
+                                    <i class="fas fa-arrow-up"></i>
+                                    +2.4% from last month
+                                </span>
+                            </div>
                         </div>
-                        <div class="account_details">
-                            <span>Account: <span class="account_no"><?= htmlspecialchars($_SESSION['client_account']) ?></span></span>
-                            <button class="view_account_no" aria-label="show_ac">
+                        
+                        <div class="account-details-premium">
+                            <div class="account-number">
+                                <span class="label">Account Number</span>
+                                <span class="number" data-account="<?= htmlspecialchars($_SESSION['client_account']) ?>"><?= htmlspecialchars($_SESSION['client_account']) ?></span>
+                                        <button class="view_account_no" aria-label="show_ac">
                                 <i class="fas fa-eye-slash"></i>
                             </button>
+                            </div>
+                            <div class="account-status">
+                                <span class="status-badge active">
+                                    <i class="fas fa-check-circle"></i>
+                                    Active
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="balance-card-gradient"></div>
+                    </div>
+
+                    <!-- Premium Analytics Overview -->
+                    <div class="analytics-overview">
+                        <div class="analytics-header">
+                            <h3>Financial Overview</h3>
+                            <div class="period-selector">
+                                <button class="period-btn active" data-period="month">This Month</button>
+                                <button class="period-btn" data-period="quarter">Quarter</button>
+                                <button class="period-btn" data-period="year">Year</button>
+                            </div>
+                        </div>
+                        
+                        <div class="analytics-cards">
+                            <div class="analytics-card income">
+                                <div class="card-icon">
+                                    <i class="fas fa-arrow-down"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>Income</h4>
+                                    <p class="amount">GHC<?= number_format($monthlySummary['income'] ?? 0, 2) ?></p>
+                                    <span class="change positive">+12.5%</span>
+                                </div>
+                            </div>
+                            
+                            <div class="analytics-card expenses">
+                                <div class="card-icon">
+                                    <i class="fas fa-arrow-up"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>Expenses</h4>
+                                    <p class="amount">GHC<?= number_format($monthlySummary['expenses'] ?? 0, 2) ?></p>
+                                    <span class="change negative">-3.2%</span>
+                                </div>
+                            </div>
+                            
+                            <div class="analytics-card transactions">
+                                <div class="card-icon">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>Transactions</h4>
+                                    <p class="amount"><?= $monthlySummary['count'] ?? 0 ?></p>
+                                    <span class="change positive">+8.1%</span>
+                                </div>
+                            </div>
+                            
+                            <div class="analytics-card savings">
+                                <div class="card-icon">
+                                    <i class="fas fa-piggy-bank"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>Net Savings</h4>
+                                    <p class="amount">GHC<?= number_format(($monthlySummary['income'] ?? 0) - ($monthlySummary['expenses'] ?? 0), 2) ?></p>
+                                    <span class="change positive">+15.7%</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="action_buttons">
-                        <a href="../transactions/history.php" class="btn btn-primary">
-                            <i class="fas fa-exchange-alt"></i>
-                            <span>Recent Transactions</span>
-                        </a>
-                        <a href="../transactions/statement.php" class="btn btn-secondary">
-                            <i class="fas fa-file-invoice-dollar"></i>
-                            <span>Account Statement</span>
-                        </a>
+                    <!-- Premium Quick Actions -->
+                    <div class="premium-quick-actions">
+                        <div class="section-header">
+                            <h3>Quick Actions</h3>
+                            <p class="section-subtitle">Manage your finances efficiently</p>
+                        </div>
+                        
+                        <div class="quick-actions-grid">
+                            <a href="../transactions/transfer.php" class="quick-action-card primary">
+                                <div class="action-icon">
+                                    <i class="fas fa-paper-plane"></i>
+                                </div>
+                                <div class="action-content">
+                                    <h4>Send Money</h4>
+                                    <p>Transfer funds instantly</p>
+                                </div>
+                                <div class="action-arrow">
+                                    <i class="fas fa-arrow-right"></i>
+                                </div>
+                            </a>
+                            
+                            <a href="../transactions/deposit.php" class="quick-action-card secondary">
+                                <div class="action-icon">
+                                    <i class="fas fa-plus-circle"></i>
+                                </div>
+                                <div class="action-content">
+                                    <h4>Add Funds</h4>
+                                    <p>Deposit to your account</p>
+                                </div>
+                                <div class="action-arrow">
+                                    <i class="fas fa-arrow-right"></i>
+                                </div>
+                            </a>
+                            
+                            <a href="../transactions/history.php" class="quick-action-card tertiary">
+                                <div class="action-icon">
+                                    <i class="fas fa-history"></i>
+                                </div>
+                                <div class="action-content">
+                                    <h4>View History</h4>
+                                    <p>Transaction records</p>
+                                </div>
+                                <div class="action-arrow">
+                                    <i class="fas fa-arrow-right"></i>
+                                </div>
+                            </a>
+                            
+                            <a href="../pages/analytics.php" class="quick-action-card accent">
+                                <div class="action-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="action-content">
+                                    <h4>Analytics</h4>
+                                    <p>Financial insights</p>
+                                </div>
+                                <div class="action-arrow">
+                                    <i class="fas fa-arrow-right"></i>
+                                </div>
+                            </a>
+                        </div>
                     </div>
 
                     <div class="transactions_section">
@@ -331,82 +483,185 @@ $monthlySummary = mysqli_fetch_assoc($stmt->get_result());
                 </main>
 
                 <aside>
-                    <div class="quick_actions">
-                        <div class="section_header">
-                            <h3>Quick Actions</h3>
+                    <!-- Premium Financial Insights -->
+                    <div class="premium-insights-card">
+                        <div class="insights-header">
+                            <h3>Financial Insights</h3>
+                            <div class="insights-badge">
+                                <i class="fas fa-lightbulb"></i>
+                                AI Powered
+                            </div>
                         </div>
-                        <div class="action_grid">
-                            <a href="../transactions/deposit.php" class="action_card deposit">
-                                <div class="action_icon">
-                                    <i class="fas fa-money-bill-wave"></i>
+                        
+                        <div class="insights-content">
+                            <div class="insight-item featured">
+                                <div class="insight-icon">
+                                    <i class="fas fa-chart-line"></i>
                                 </div>
-                                <div class="action_text">
-                                    <span>Deposit</span>
-                                    <small>Add funds</small>
+                                <div class="insight-text">
+                                    <h4>Spending Trend</h4>
+                                    <p>Your spending decreased by 8% this month. Great job managing your finances!</p>
+                                    <span class="insight-action">View Details</span>
                                 </div>
-                            </a>
-                            <a href="../transactions/withdrawal.php" class="action_card withdraw">
-                                <div class="action_icon">
-                                    <i class="fas fa-hand-holding-usd"></i>
+                            </div>
+                            
+                            <div class="insight-item">
+                                <div class="insight-icon">
+                                    <i class="fas fa-piggy-bank"></i>
                                 </div>
-                                <div class="action_text">
-                                    <span>Withdraw</span>
-                                    <small>Get cash</small>
+                                <div class="insight-text">
+                                    <h4>Savings Goal</h4>
+                                    <p>You're 73% towards your monthly savings target of GHC 2,000</p>
                                 </div>
-                            </a>
-                            <a href="../transactions/transfer.php" class="action_card transfer">
-                                <div class="action_icon">
-                                    <i class="fas fa-paper-plane"></i>
+                            </div>
+                            
+                            <div class="insight-item">
+                                <div class="insight-icon">
+                                    <i class="fas fa-trophy"></i>
                                 </div>
-                                <div class="action_text">
-                                    <span>Transfer</span>
-                                    <small>Send money</small>
+                                <div class="insight-text">
+                                    <h4>Achievement</h4>
+                                    <p>Congratulations! You've maintained a positive balance for 6 months</p>
                                 </div>
-                            </a>
-                            <a href="../transactions/history.php" class="action_card history">
-                                <div class="action_icon">
-                                    <i class="fas fa-history"></i>
-                                </div>
-                                <div class="action_text">
-                                    <span>History</span>
-                                    <small>View all</small>
-                                </div>
-                            </a>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="account_summary">
-                        <div class="section_header">
-                            <h3>Account Summary</h3>
+                    <!-- Premium Banking Services -->
+                    <div class="premium-services-card">
+                        <div class="services-header">
+                            <h3>Premium Services</h3>
+                            <span class="premium-badge">Gold Member</span>
                         </div>
-                        <div class="summary_items">
-                            <div class="summary_item">
-                                <div class="summary_icon income">
-                                    <i class="fas fa-wallet"></i>
+                        
+                        <div class="services-grid">
+                            <div class="service-item">
+                                <div class="service-icon">
+                                    <i class="fas fa-credit-card"></i>
                                 </div>
-                                <div class="summary_details">
-                                    <p>Monthly Income</p>
-                                    <p>GHC<?= number_format($monthlySummary['income'] ?? 0, 2) ?></p>
-                                </div>
-                            </div>
-                            <div class="summary_item">
-                                <div class="summary_icon expense">
-                                    <i class="fas fa-shopping-cart"></i>
-                                </div>
-                                <div class="summary_details">
-                                    <p>Monthly Expenses</p>
-                                    <p>GHC<?= number_format(abs($monthlySummary['expenses'] ?? 0), 2) ?></p>
+                                <div class="service-content">
+                                    <h4>Virtual Cards</h4>
+                                    <p>Create instant virtual cards for online shopping</p>
+                                    <button class="service-btn">Create Card</button>
                                 </div>
                             </div>
-                            <div class="summary_item">
-                                <div class="summary_icon transactions">
-                                    <i class="fas fa-exchange-alt"></i>
+                            
+                            <div class="service-item">
+                                <div class="service-icon">
+                                    <i class="fas fa-shield-alt"></i>
                                 </div>
-                                <div class="summary_details">
-                                    <p>Total Transactions</p>
-                                    <p><?= $monthlySummary['count'] ?? 0 ?></p>
+                                <div class="service-content">
+                                    <h4>Account Protection</h4>
+                                    <p>Advanced security features and fraud monitoring</p>
+                                    <button class="service-btn">Learn More</button>
                                 </div>
                             </div>
+                            
+                            <div class="service-item">
+                                <div class="service-icon">
+                                    <i class="fas fa-percentage"></i>
+                                </div>
+                                <div class="service-content">
+                                    <h4>Investment Options</h4>
+                                    <p>Grow your wealth with our premium investment plans</p>
+                                    <button class="service-btn">Explore</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Enhanced Monthly Summary -->
+                    <div class="enhanced-monthly-summary">
+                        <div class="summary-header">
+                            <h3>Monthly Overview</h3>
+                            <div class="month-selector">
+                                <button class="month-nav prev">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <span class="current-month"><?= date('F Y') ?></span>
+                                <button class="month-nav next">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="summary-chart">
+                            <canvas id="monthlyChart" width="300" height="200"></canvas>
+                        </div>
+                        
+                        <div class="summary-stats-enhanced">
+                            <div class="stat-item-enhanced income">
+                                <div class="stat-header">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-arrow-down"></i>
+                                    </div>
+                                    <span class="stat-label">Income</span>
+                                </div>
+                                <div class="stat-amount">GHC<?= number_format($monthlySummary['income'] ?? 0, 2) ?></div>
+                                <div class="stat-change positive">+12.5%</div>
+                            </div>
+                            
+                            <div class="stat-item-enhanced expenses">
+                                <div class="stat-header">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-arrow-up"></i>
+                                    </div>
+                                    <span class="stat-label">Expenses</span>
+                                </div>
+                                <div class="stat-amount">GHC<?= number_format($monthlySummary['expenses'] ?? 0, 2) ?></div>
+                                <div class="stat-change negative">-3.2%</div>
+                            </div>
+                            
+                            <div class="stat-item-enhanced net">
+                                <div class="stat-header">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-balance-scale"></i>
+                                    </div>
+                                    <span class="stat-label">Net</span>
+                                </div>
+                                <div class="stat-amount">GHC<?= number_format(($monthlySummary['income'] ?? 0) - ($monthlySummary['expenses'] ?? 0), 2) ?></div>
+                                <div class="stat-change positive">+18.7%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Premium Support -->
+                    <div class="premium-support-card">
+                        <div class="support-header">
+                            <div class="support-icon">
+                                <i class="fas fa-headset"></i>
+                            </div>
+                            <div class="support-text">
+                                <h3>24/7 Premium Support</h3>
+                                <p>Get instant help from our banking experts</p>
+                            </div>
+                        </div>
+                        
+                        <div class="support-actions">
+                            <button class="support-btn primary">
+                                <i class="fas fa-comments"></i>
+                                Live Chat
+                            </button>
+                            <button class="support-btn secondary">
+                                <i class="fas fa-phone"></i>
+                                Call Now
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Notification System -->
+                    <div class="notification-system">
+                        <div class="notification-header">
+                            <h3>Notifications</h3>
+                            <button id="mark-all-read">Mark all as read</button>
+                        </div>
+                        
+                        <div class="notification-list">
+                            <!-- Notification items will be loaded here -->
+                        </div>
+                        
+                        <div class="notification-footer">
+                            <a href="../pages/notifications.php">View all notifications</a>
                         </div>
                     </div>
                 </aside>
@@ -428,7 +683,7 @@ $monthlySummary = mysqli_fetch_assoc($stmt->get_result());
 
         // Account number toggle
         document.querySelector('.view_account_no').addEventListener('click', function() {
-            const accountNo = document.querySelector('.account_no');
+            const accountNo = document.querySelector('.number');
             const icon = this.querySelector('i');
             
             if(accountNo.style.filter === 'blur(4px)') {
@@ -440,11 +695,16 @@ $monthlySummary = mysqli_fetch_assoc($stmt->get_result());
             }
         });
 
-// Replace your existing notification dropdown code with this:
-
-// Notification system
+// Notification system with improved error handling
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Initializing notification system...');
+    
     const notificationBell = document.querySelector('.topbar_icon.alert');
+    if (!notificationBell) {
+        console.error('Notification bell not found!');
+        return;
+    }
+    
     const notificationDropdown = document.createElement('div');
     notificationDropdown.className = 'notification-dropdown';
     notificationDropdown.innerHTML = `
@@ -461,10 +721,20 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Load notifications and update badge
     function updateNotifications() {
+        console.log('Updating notifications...');
         fetch('../scripts/get_unread_count.php')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
+                console.log('Unread count:', data.count);
                 updateBadge(data.count || 0);
+            })
+            .catch(error => {
+                console.error('Error fetching unread count:', error);
             });
     }
     
@@ -486,11 +756,16 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Toggle dropdown
     notificationBell.addEventListener('click', function(e) {
+        e.preventDefault();
         e.stopPropagation();
         
+        console.log('Notification bell clicked');
+        
         if (notificationDropdown.style.display === 'block') {
+            console.log('Hiding dropdown');
             notificationDropdown.style.display = 'none';
         } else {
+            console.log('Showing dropdown');
             // When opening dropdown
             notificationDropdown.style.display = 'block';
             loadNotifications(false);
@@ -501,13 +776,20 @@ document.addEventListener('DOMContentLoaded', function() {
             // Mark all as read in backend
             fetch('../scripts/mark_all_read.php', {
                 method: 'POST'
-            }).catch(error => console.error('Error:', error));
+            }).catch(error => console.error('Error marking all as read:', error));
         }
     });
     
     // Close when clicking outside
-    document.addEventListener('click', function() {
-        notificationDropdown.style.display = 'none';
+    document.addEventListener('click', function(e) {
+        if (!notificationBell.contains(e.target)) {
+            notificationDropdown.style.display = 'none';
+        }
+    });
+    
+    // Prevent dropdown from closing when clicking inside it
+    notificationDropdown.addEventListener('click', function(e) {
+        e.stopPropagation();
     });
     
     // Initial load
@@ -518,13 +800,20 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Function to load notifications
     function loadNotifications(unreadOnly = false) {
+        console.log('Loading notifications...');
         fetch('../scripts/get_notifications.php?unread=' + (unreadOnly ? '1' : '0'))
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
+                console.log('Notifications loaded:', data);
                 const list = notificationDropdown.querySelector('.notification-list');
                 list.innerHTML = '';
                 
-                if (data.length === 0) {
+                if (!data || data.length === 0) {
                     list.innerHTML = '<div class="no-notifications">No notifications</div>';
                     return;
                 }
@@ -538,9 +827,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             ${getNotificationIcon(notif.type)}
                         </div>
                         <div class="notification-content">
-                            <div class="notification-title">${notif.title}</div>
-                            <div class="notification-message">${notif.message}</div>
-                            <div class="notification-time">${notif.time_ago}</div>
+                            <div class="notification-title">${notif.title || 'Notification'}</div>
+                            <div class="notification-message">${notif.message || ''}</div>
+                            <div class="notification-time">${notif.time_ago || ''}</div>
                         </div>
                         <button class="notification-delete" ${notif.is_deletable ? '' : 'disabled'}>
                             <i class="fas fa-times"></i>
@@ -550,7 +839,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     // Click handler for individual notifications
                     item.addEventListener('click', function(e) {
-                        if (!e.target.classList.contains('notification-delete')) {
+                        if (!e.target.classList.contains('notification-delete') && !e.target.closest('.notification-delete')) {
                             if (!notif.is_read) {
                                 markAsRead(notif.id);
                                 item.classList.remove('unread');
@@ -560,12 +849,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     // Delete button handler
                     const deleteBtn = item.querySelector('.notification-delete');
-                    deleteBtn.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        deleteNotification(notif.id);
-                        item.remove();
-                    });
+                    if (deleteBtn && !deleteBtn.disabled) {
+                        deleteBtn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            deleteNotification(notif.id);
+                            item.remove();
+                        });
+                    }
                 });
+            })
+            .catch(error => {
+                console.error('Error loading notifications:', error);
+                const list = notificationDropdown.querySelector('.notification-list');
+                list.innerHTML = '<div class="no-notifications">Error loading notifications</div>';
             });
     }
     
@@ -588,7 +884,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({ id: id })
-        });
+        }).catch(error => console.error('Error marking notification as read:', error));
     }
     
     function deleteNotification(id) {
@@ -598,8 +894,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({ id: id })
-        });
+        }).catch(error => console.error('Error deleting notification:', error));
     }
+    
+    console.log('Notification system initialized successfully');
 });
     </script>
 </body>

@@ -34,8 +34,3 @@ function mySubmitFunction(e) {
   e.preventDefault();
   return false;
 }
-
-// Notification system (same as before)
-document.addEventListener("DOMContentLoaded", function () {
-  // [Previous notification code remains exactly the same]
-});
