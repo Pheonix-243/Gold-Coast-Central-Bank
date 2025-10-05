@@ -351,8 +351,8 @@ input[type="date"]:valid::before {
                           <?php
                           if ($_GET["ty"]=="Transection") {
                             ?>
-                          <th style="text-align: center; width: 17%;">Reciever Account Number</th>
-                          <th style="text-align: center; width: 17%;">Reciever Name</th>
+                          <th style="text-align: center; width: 17%;">receiver Account Number</th>
+                          <th style="text-align: center; width: 17%;">receiver Name</th>
                           <?php
                           }
                           ?>
@@ -382,7 +382,7 @@ input[type="date"]:valid::before {
                           <?php
                           if ($row['type']=="Transection" && $_GET["ty"]=="Transection") {
                           ?>
-                          <td style="text-align: center;padding-top: 25px;"><?php echo $row['reciever'];?></td>
+                          <td style="text-align: center;padding-top: 25px;"><?php echo $row['receiver'];?></td>
                           <td style="text-align: center;padding-top: 25px;"><?php echo $row['r_name'];?></td>
                           <?php
                           }

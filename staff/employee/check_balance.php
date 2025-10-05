@@ -294,11 +294,11 @@ html {
                     <div class="row">
                         <div  class="col-sm-6">
                             <p for="exampleInputEmail1" style="margin-bottom: 1px; margin-top: 8px;">Account Number</p>
-                             <input type="text" class="form-control" name="reciever1" value="<?php echo $row['account'];?>"readonly>
+                             <input type="text" class="form-control" name="receiver1" value="<?php echo $row['account'];?>"readonly>
                         </div>
                         <div  class="col-sm-6">
                             <p for="exampleInputEmail1" style="margin-bottom: 1px; margin-top: 8px;">Current Balance</p>
-                            <input type="text" class="form-control" name="reciever2" value="<?php echo $row['balance'].".00 $";?>"  readonly>
+                            <input type="text" class="form-control" name="receiver2" value="<?php echo $row['balance'].".00 $";?>"  readonly>
                         </div>
                     </div>
                     <hr style="height:1px;border-width:0; width: 100%; margin-bottom:  -5px; margin-top: 20px; color:red;background-color:gray;">

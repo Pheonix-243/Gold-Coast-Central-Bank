@@ -15,7 +15,7 @@ class DatabaseConnection {
     private function connect() {
         try {
             $this->connection = new PDO(
-                "mysql:host=localhost;dbname=web_programming;charset=utf8mb4",
+                "mysql:host=localhost;dbname=gcc_bank;charset=utf8mb4",
                 "root",
                 "",
                 [

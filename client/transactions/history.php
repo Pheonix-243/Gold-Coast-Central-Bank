@@ -26,7 +26,7 @@ $search = isset($_GET['search']) ? trim($_GET['search']) : null;
 
 // Base query with totals calculation
 $sql = "SELECT SQL_CALC_FOUND_ROWS h.*, t.name as type_name, 
-               SUM(CASE WHEN h.reciever = ? AND h.account = h.reciever THEN h.amount ELSE 0 END) as incoming_total,
+               SUM(CASE WHEN h.receiver = ? AND h.account = h.receiver THEN h.amount ELSE 0 END) as incoming_total,
                SUM(CASE WHEN h.sender = ? AND h.account = h.sender THEN h.amount ELSE 0 END) as outgoing_total
         FROM account_history h
         JOIN transaction_types t ON h.type = t.id
@@ -67,7 +67,7 @@ if ($maxAmount) {
 }
 
 if ($direction === 'in') {
-    $sql .= " AND h.reciever = ? AND h.account = h.reciever";
+    $sql .= " AND h.receiver = ? AND h.account = h.receiver";
     $params[] = $_SESSION['client_account'];
     $paramTypes .= "s";
 } elseif ($direction === 'out') {
@@ -97,7 +97,7 @@ $transactions = mysqli_stmt_get_result($stmt);
 
 // Get totals and row count
 $totals = mysqli_fetch_assoc(mysqli_query($con, "SELECT 
-    SUM(CASE WHEN reciever = '{$_SESSION['client_account']}' AND account = reciever THEN amount ELSE 0 END) as incoming_total,
+    SUM(CASE WHEN receiver = '{$_SESSION['client_account']}' AND account = receiver THEN amount ELSE 0 END) as incoming_total,
     SUM(CASE WHEN sender = '{$_SESSION['client_account']}' AND account = sender THEN amount ELSE 0 END) as outgoing_total
     FROM account_history WHERE account = '{$_SESSION['client_account']}'"));
 
@@ -193,7 +193,7 @@ $types = mysqli_query($con, "SELECT * FROM transaction_types ORDER BY name");
                     <div class="nav_link_text">Analytics</div>
                 </a>
 
-                <a href="../settings/password.php" class="nav_link" aria-label="settings">
+                <a href="../pages/security.php" class="nav_link" aria-label="settings">
                     <div class="nav_link_icon">
                         <i class="fas fa-lock"></i>
                     </div>
@@ -382,7 +382,7 @@ $types = mysqli_query($con, "SELECT * FROM transaction_types ORDER BY name");
                                 <?php while ($row = mysqli_fetch_assoc($transactions)): ?>
                                     <?php
                                     $isOutgoing = $row['sender'] == $_SESSION['client_account'];
-                                    $isIncoming = $row['reciever'] == $_SESSION['client_account'];
+                                    $isIncoming = $row['receiver'] == $_SESSION['client_account'];
                                     $typeName = $row['type_name'];
                                     $peerName = $isOutgoing ? $row['r_name'] : $row['s_name'];
                                     $directionText = $isOutgoing ? 'To' : 'From';

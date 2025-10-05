@@ -91,7 +91,7 @@ if (isset($_POST['insert'])){
             $regisdate=date("Y-m-d");
             $tms = date("h:i:s");
             $tms1 = date("Y-m-d h:i:s");
-            mysqli_query($con,"INSERT INTO account_history(account,sender,s_name,reciever,r_name,dt,tm,type,amount) VALUES('$acc_full','$acc_full','$name','null','null','$regisdate','$tms','Deposit','$balance')");
+            mysqli_query($con,"INSERT INTO account_history(account,sender,s_name,receiver,r_name,dt,tm,type,amount) VALUES('$acc_full','$acc_full','$name','null','null','$regisdate','$tms','Deposit','$balance')");
             
             $connected = @fsockopen("www.google.com", 80); 
             if ($connected){

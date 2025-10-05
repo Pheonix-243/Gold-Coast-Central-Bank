@@ -159,7 +159,7 @@ private function recordTransaction($account, $sender, $senderName, $receiver, $r
     list($dt, $tm) = explode(' ', $datetime);
     
     $sql = "INSERT INTO account_history 
-            (account, sender, s_name, reciever, r_name, type, amount, reference_number, 
+            (account, sender, s_name, receiver, r_name, type, amount, reference_number, 
              status, description, dt, tm) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     

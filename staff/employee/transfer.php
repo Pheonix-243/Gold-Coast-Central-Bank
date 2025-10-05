@@ -29,9 +29,9 @@ if (isset($_POST['transfer'])){
     
     // Get receiver's details from the form
     $name1 = $_POST['name1'];       // Receiver's name
-    $acc1 = $_POST['reciever2'];    // Receiver's account number
+    $acc1 = $_POST['receiver2'];    // Receiver's account number
     $email1 = $_POST['email1'];      // Receiver's email
-    $title1 = $_POST['reciever1'];   // Receiver's account title
+    $title1 = $_POST['receiver1'];   // Receiver's account title
     $blnc1 = $_POST['blnc1'];        // Receiver's current balance
     
     // Get the transfer amount from the form
@@ -66,10 +66,10 @@ if (isset($_POST['transfer'])){
             
             // Record transaction in account_history table:
             // 1. Entry for the sender (transaction type)
-            mysqli_query($con, "INSERT INTO account_history(account,sender,s_name,reciever,r_name,dt,tm,type,amount) VALUES('$acc','$acc','$name','$acc1','$name1','$regisdate','$tms','Transection','$newbnc')");
+            mysqli_query($con, "INSERT INTO account_history(account,sender,s_name,receiver,r_name,dt,tm,type,amount) VALUES('$acc','$acc','$name','$acc1','$name1','$regisdate','$tms','Transection','$newbnc')");
             
             // 2. Entry for the receiver (received type)
-            mysqli_query($con, "INSERT INTO account_history(account,sender,s_name,reciever,r_name,dt,tm,type,amount) VALUES('$acc1','$acc','$name','$acc1','$name1','$regisdate','$tms','Recieved','$newbnc')");
+            mysqli_query($con, "INSERT INTO account_history(account,sender,s_name,receiver,r_name,dt,tm,type,amount) VALUES('$acc1','$acc','$name','$acc1','$name1','$regisdate','$tms','Recieved','$newbnc')");
             
             // Check internet connection before sending emails
             $connected = @fsockopen("www.google.com", 80); 
@@ -373,8 +373,8 @@ html {
                              <input type="text" class="form-control" name="sender" placeholder="Enter sender account number" id="snd" required>
                         </div>
                         <div  class="col-sm-5">
-                            <p for="exampleInputEmail1" style="margin-bottom: 1px; margin-top: 8px;">Reciever Account</p>
-                            <input type="text" class="form-control" name="reciever" placeholder="Enter reciever account number" id="rcn" required>
+                            <p for="exampleInputEmail1" style="margin-bottom: 1px; margin-top: 8px;">receiver Account</p>
+                            <input type="text" class="form-control" name="receiver" placeholder="Enter receiver account number" id="rcn" required>
                         </div>
                         <div  class="col-sm-2">
                         <input type="submit"  class="btn btn-primary form-control" style="margin-top: 28px; font-size: 17px; width: 120px; border-radius: 5px;" name="filter" id="sbtn" value="Search">
@@ -386,18 +386,18 @@ html {
                 <?php
                 if (isset($_POST['filter'])){
                   $sender=$_POST['sender'];
-                  $reciever=$_POST['reciever'];
+                  $receiver=$_POST['receiver'];
                   $sql="SELECT c.* , p.* FROM accounts_info c,accountsholder p WHERE c.account=p.account and p.account='$sender'";
                   $result = mysqli_query($con,$sql);
                   $row = mysqli_fetch_array($result,MYSQLI_ASSOC);
                   $nm = (mysqli_query($con,$sql));
                   if(mysqli_num_rows($nm)>0){
-                    if($sender==$reciever){
+                    if($sender==$receiver){
                       $_SESSION["title"]="Error";
                       $_SESSION["status"]="Use different account";
                       $_SESSION["code"]="error";
                     }else{
-                      $sqi="SELECT c1.* , p1.* FROM accounts_info c1,accountsholder p1 WHERE c1.account=p1.account and p1.account='$reciever'";
+                      $sqi="SELECT c1.* , p1.* FROM accounts_info c1,accountsholder p1 WHERE c1.account=p1.account and p1.account='$receiver'";
                       $result1 = mysqli_query($con,$sqi);
                       $row1 = mysqli_fetch_array($result1,MYSQLI_ASSOC);
                       $x1 = (mysqli_query($con,$sqi));
@@ -420,15 +420,15 @@ html {
                     </div>
                     <div class="row">
                         <div  class="col-sm-6">
-                            <p for="exampleInputEmail1" style="margin-bottom: 1px; margin-top: 8px;">Reciever Account Title</p>
-                             <input type="text" class="form-control" name="reciever1" value="<?php echo $row1['account_title'];?>"readonly>
+                            <p for="exampleInputEmail1" style="margin-bottom: 1px; margin-top: 8px;">receiver Account Title</p>
+                             <input type="text" class="form-control" name="receiver1" value="<?php echo $row1['account_title'];?>"readonly>
                              <input type="hidden" class="form-control" name="blnc1" value="<?php echo $row1['balance'];?>" readonly>
                              <input type="hidden" class="form-control" name="email1" value="<?php echo $row1['email'];?>"readonly>
                              <input type="hidden" class="form-control" name="name1" value="<?php echo $row1['name'];?>"  readonly>
                         </div>
                         <div  class="col-sm-6">
-                            <p for="exampleInputEmail1" style="margin-bottom: 1px; margin-top: 8px;">Reciever Account Number</p>
-                            <input type="text" class="form-control" name="reciever2" value="<?php echo $row1['account'];?>"  readonly>
+                            <p for="exampleInputEmail1" style="margin-bottom: 1px; margin-top: 8px;">receiver Account Number</p>
+                            <input type="text" class="form-control" name="receiver2" value="<?php echo $row1['account'];?>"  readonly>
                         </div>
                     </div>
                     <hr style="height:1px;border-width:0; width: 100%; margin-bottom:  -5px; margin-top: 20px; color:red;background-color:gray;">
@@ -446,9 +446,9 @@ html {
                     </form>
                     <?php
                     }else{
-                        //reciever...
+                        //receiver...
                         $_SESSION["title"]="Error";
-                        $_SESSION["status"]="Reciever account not found";
+                        $_SESSION["status"]="receiver account not found";
                         $_SESSION["code"]="error";
                       }
                     }

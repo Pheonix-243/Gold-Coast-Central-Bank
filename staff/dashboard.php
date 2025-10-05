@@ -1,840 +1,1421 @@
 <?php
 session_start();
- include '../conn.php';
- include 'number_fomt.php';
- include 'strength.php';
+include '../conn.php';
+include 'number_fomt.php';
+include 'strength.php';
+
 if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
     $_SESSION["status"]="Please login your account here";
     $_SESSION["code"]="warning";
     header("location: index.php");
     exit;
 }
+
+// Get security notifications
+$security_alerts = [];
+$security_query = "SELECT COUNT(*) as count FROM security_logs 
+                  WHERE severity IN ('WARNING', 'ERROR', 'CRITICAL') 
+                  AND created_at >= NOW() - INTERVAL 24 HOUR";
+$result = mysqli_query($con, $security_query);
+$security_data = mysqli_fetch_assoc($result);
+$security_alerts_count = $security_data ? $security_data['count'] : 0;
+
+// Get recent suspicious activities
+$suspicious_query = "SELECT event_type, created_at FROM security_logs 
+                    WHERE severity IN ('ERROR', 'CRITICAL') 
+                    ORDER BY created_at DESC LIMIT 5";
+$suspicious_result = mysqli_query($con, $suspicious_query);
+if($suspicious_result) {
+    while($row = mysqli_fetch_assoc($suspicious_result)) {
+        $security_alerts[] = $row;
+    }
+}
+
+// Get system status
+$system_status = 'normal';
+$system_message = 'All systems operational';
+
+// Check for any critical issues
+$critical_issues = mysqli_query($con, "SELECT COUNT(*) as count FROM security_logs 
+                                      WHERE severity = 'CRITICAL' 
+                                      AND created_at >= NOW() - INTERVAL 1 HOUR");
+if($critical_issues) {
+    $critical_count = mysqli_fetch_assoc($critical_issues)['count'];
+    if($critical_count > 0) {
+        $system_status = 'critical';
+        $system_message = "$critical_count critical issue(s) detected in the last hour";
+    }
+}
+
+// Get user's recent activity
+$user_activity = [];
+if(isset($_SESSION['id'])) {
+    $activity_query = "SELECT event_type, created_at FROM security_logs 
+                      WHERE session_id = '" . session_id() . "' 
+                      ORDER BY created_at DESC LIMIT 5";
+    $activity_result = mysqli_query($con, $activity_query);
+    if($activity_result) {
+        while($row = mysqli_fetch_assoc($activity_result)) {
+            $user_activity[] = $row;
+        }
+    }
+}
+
+// Get transaction stats
+$transaction_stats = [
+    'total' => 0,
+    'withdrawals' => 0,
+    'deposits' => 0
+];
+
+$total_transactions = mysqli_query($con, "SELECT COUNT(*) as total FROM account_history");
+if($total_transactions) {
+    $transaction_stats['total'] = mysqli_fetch_assoc($total_transactions)['total'];
+}
+
+$withdrawal_stats = mysqli_query($con, "SELECT COUNT(*) as total FROM account_history WHERE type = 3");
+if($withdrawal_stats) {
+    $transaction_stats['withdrawals'] = mysqli_fetch_assoc($withdrawal_stats)['total'];
+}
+
+$deposit_stats = mysqli_query($con, "SELECT COUNT(*) as total FROM account_history WHERE type = 4");
+if($deposit_stats) {
+    $transaction_stats['deposits'] = mysqli_fetch_assoc($deposit_stats)['total'];
+}
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
-    <title>Sky Bank Limited</title>
-    <!-- Favicon-->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css" integrity="sha512-5A8nwdMOWrSz20fDsjczgUidUBR8liPYU+WymTZP1lmY9G6Oc7HlZv156XqnsgNUzTyMefFTcsFH/tnJE/+xBg==" crossorigin="anonymous" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ionicons/2.0.1/css/ionicons.min.css">
+    <title>Gold Coast Central Bank - Dashboard</title>
+    
+    <!-- Favicon -->
     <link rel="icon" href="images/icc.ico" type="image/x-icon">
-    <!-- fontawesome-->
-
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css?family=Roboto:400,700&subset=latin,cyrillic-ext" rel="stylesheet" type="text/css">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" type="text/css">
-
-    <!-- Bootstrap Core Css -->
-    <link href="plugins/bootstrap/css/bootstrap.css" rel="stylesheet">
-
-    <!-- Waves Effect Css -->
-    <link href="plugins/node-waves/waves.css" rel="stylesheet" />
-
-    <!-- Animation Css -->
-    <link href="plugins/animate-css/animate.css" rel="stylesheet" />
-
-    <!-- Morris Chart Css-->
-    <link href="plugins/morrisjs/morris.css" rel="stylesheet" />
-
-    <!-- Custom Css -->
-    <link href="css/style.css" rel="stylesheet">
-     <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/sweetalert2@10.10.1/dist/sweetalert2.min.css'>
-
-    <!-- AdminBSB Themes. You can choose a theme from css/themes instead of get all themes -->
-    <link href="css/themes/all-themes.css" rel="stylesheet" />
-<style type="text/css">
-        .footer-basic {
-  padding:40px 0;
-  background-color:brown;
-  color:white;
-}
-
-.footer-basic ul {
-  padding:0;
-  list-style:none;
-  text-align:center;
-  font-size:18px;
-  line-height:1.6;
-  margin-bottom:0;
-}
-
-.footer-basic li {
-  padding:0 10px;
-}
-
-.footer-basic ul a {
-  color:inherit;
-  text-decoration:none;
-  opacity:0.8;
-}
-
-.footer-basic ul a:hover {
-  opacity:1;
-}
-
-.footer-basic .social {
-  text-align:center;
-  padding-bottom:25px;
-}
-
-.footer-basic .social > a {
-  font-size:24px;
-  width:40px;
-  height:40px;
-  line-height:40px;
-  display:inline-block;
-  text-align:center;
-  border-radius:50%;
-  border:1px solid #ccc;
-  margin:0 8px;
-  color:inherit;
-  opacity:0.75;
-}
-
-.footer-basic .social > a:hover {
-  opacity:0.9;
-}
-
-.footer-basic .copyright {
-  text-align:center;
-  font-size:16px;
-  color:#aaa;
-  margin-bottom:-25px;
-}
-html {
-  scroll-behavior: smooth;
-}
-#myTable {
-  font-family: Arial, Helvetica, sans-serif;
-  border-collapse: collapse;
-  width: 100%;
-}
-
-#myTable td, #myTable th {
-  border: 1px solid #ddd;
-  padding: 8px;
-}
-#myTable tr:nth-child(even){background-color: #f2f2f2;}
-
-#myTable tr:hover {background-color: #ddd;}
-
-#myTable th {
-  padding-top: 12px;
-  padding-bottom: 12px;
-  text-align: left;
-  color: black;
-}
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Modern CSS Framework -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            /* Dark Theme Base */
+            --dark-primary: #1a1f2c;
+            --dark-secondary: #242b3d;
+            --dark-tertiary: #2f3648;
+            --dark-bg: #0f131c;
+            --dark-surface: #1a1f2c;
+            --dark-elevated: #242b3d;
+            
+            /* Gold Accents */
+            --gold-primary: #d4af37;
+            --gold-secondary: #b8941f;
+            --gold-light: #f4e4a6;
+            --gold-dark: #9d7c0d;
+            
+            /* Enhanced Color System */
+            --primary: #3b82f6;
+            --primary-dark: #1e40af;
+            --secondary: #10b981;
+            --secondary-dark: #059669;
+            --accent: #06b6d4;
+            --accent-dark: #0891b2;
+            --success: #22c55e;
+            --warning: #eab308;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            
+            /* Text Colors */
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+            --text-white: #ffffff;
+            
+            /* Status Colors */
+            --status-normal: var(--success);
+            --status-warning: var(--warning);
+            --status-critical: var(--danger);
+            
+            /* Borders and Shadows */
+            --border-light: rgba(255,255,255,0.1);
+            --border-medium: rgba(255,255,255,0.15);
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.2);
+            --shadow-md: 0 4px 8px rgba(0,0,0,0.25);
+            --shadow-lg: 0 8px 16px rgba(0,0,0,0.3);
+            --shadow-xl: 0 12px 24px rgba(0,0,0,0.35);
+            --shadow-gold: 0 4px 20px rgba(212,175,55,0.2);
+            
+            /* Animation */
+            --transition-speed: 0.3s;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--dark-bg);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+        
+        /* System Status Bar */
+        .system-status {
+            background: var(--dark-surface);
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 14px;
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+        }
+        
+        .system-status.normal {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--status-normal);
+            border-bottom-color: var(--status-normal);
+        }
+        
+        .system-status.warning {
+            background: rgba(234, 179, 8, 0.1);
+            color: var(--status-warning);
+            border-bottom-color: var(--status-warning);
+        }
+        
+        .system-status.critical {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--status-critical);
+            border-bottom-color: var(--status-critical);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            position: fixed;
+            top: 33px;
+            left: 0;
+            height: calc(100% - 33px);
+            width: 280px;
+            background: linear-gradient(180deg, var(--dark-primary) 0%, var(--dark-surface) 100%);
+            z-index: 1000;
+            padding-top: 20px;
+            transition: all var(--transition-speed) ease;
+            box-shadow: var(--shadow-xl);
+            border-right: 1px solid var(--border-light);
+            overflow-y: auto;
+        }
+        
+        .sidebar-brand {
+            padding: 0 20px 20px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-light);
+            margin-bottom: 20px;
+        }
+        
+        .sidebar-brand h2 {
+            color: var(--gold-light);
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+            background: linear-gradient(45deg, var(--text-white), var(--gold-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .sidebar-brand p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin: 5px 0 0;
+        }
+        
+        .user-info {
+            padding: 0 20px 20px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-light);
+            margin-bottom: 20px;
+        }
+        
+        .user-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--gold-primary);
+            margin: 0 auto 15px;
+            box-shadow: var(--shadow-gold);
+            transition: all var(--transition-speed) ease;
+        }
+        
+        .user-img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+        }
+        
+        .user-name {
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .user-email {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        
+        .user-role {
+            display: inline-block;
+            padding: 3px 8px;
+            background: rgba(212, 175, 55, 0.2);
+            color: var(--gold-primary);
+            border-radius: 12px;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .sidebar-menu li {
+            margin-bottom: 5px;
+        }
+        
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all var(--transition-speed);
+            border-left: 3px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .sidebar-menu a:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+            transition: all 0.5s;
+        }
+        
+        .sidebar-menu a:hover:before, 
+        .sidebar-menu a.active:before {
+            left: 100%;
+        }
+        
+        .sidebar-menu a:hover, 
+        .sidebar-menu a.active {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            border-left: 3px solid var(--gold-primary);
+        }
+        
+        .sidebar-menu i {
+            margin-right: 12px;
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+            color: var(--gold-primary);
+        }
+        
+        .sub-menu {
+            list-style: none;
+            padding-left: 30px;
+            margin: 5px 0;
+            display: none;
+        }
+        
+        .sub-menu.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .sub-menu a {
+            padding: 10px 15px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+        
+        .sub-menu a:hover {
+            color: var(--text-primary);
+        }
+        
+        .menu-toggle {
+            position: relative;
+        }
+        
+        .menu-toggle::after {
+            content: '\f107';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            right: 20px;
+            transition: transform var(--transition-speed);
+            color: var(--text-muted);
+        }
+        
+        .menu-toggle.active::after {
+            transform: rotate(180deg);
+        }
+        
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            padding: 20px;
+            transition: all var(--transition-speed);
+            background-color: var(--dark-bg);
+            min-height: 100vh;
+            padding-top: 53px; /* Account for system status bar */
+        }
+        
+        /* Header */
+        .top-header {
+            background: var(--dark-surface);
+            padding: 15px 25px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border-light);
+            transition: all var(--transition-speed) ease;
+        }
+        
+        .top-header:hover {
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .page-title h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+        
+        .page-title p {
+            color: var(--text-muted);
+            margin: 5px 0 0;
+            font-size: 14px;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .header-actions a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all var(--transition-speed) ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .header-actions a:hover {
+            color: var(--gold-primary);
+            transform: translateY(-2px);
+        }
+        
+        .header-actions a .badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--danger);
+            color: var(--text-white);
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .quick-action-btn {
+            background: var(--dark-surface);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            transition: all var(--transition-speed) ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--text-secondary);
+        }
+        
+        .quick-action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--gold-primary);
+            color: var(--text-primary);
+        }
+        
+        .quick-action-btn i {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: var(--gold-primary);
+        }
+        
+        .quick-action-btn span {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .stat-card {
+            background: var(--dark-surface);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+            transition: all var(--transition-speed) ease;
+            border: 1px solid var(--border-light);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--gold-primary), var(--gold-dark));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform var(--transition-speed) ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .stat-card:hover:after {
+            transform: scaleX(1);
+        }
+        
+        .stat-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            font-size: 22px;
+            transition: all var(--transition-speed) ease;
+            background: rgba(255,255,255,0.05);
+            color: var(--gold-primary);
+        }
+        
+        .stat-card:hover .stat-icon {
+            transform: scale(1.1);
+            background: rgba(212,175,55,0.1);
+        }
+        
+        .stat-title {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .stat-value {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0;
+            transition: all var(--transition-speed) ease;
+        }
+        
+        .stat-card:hover .stat-value {
+            color: var(--gold-primary);
+        }
+        
+        .stat-card a {
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all var(--transition-speed) ease;
+        }
+        
+        .stat-card a:hover {
+            color: var(--gold-primary);
+            transform: translateX(3px);
+        }
+        
+        /* Charts */
+        .chart-container {
+            background: var(--dark-surface);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 25px;
+            border: 1px solid var(--border-light);
+            transition: all var(--transition-speed) ease;
+            height: 350px;
+        }
+        
+        .chart-container:hover {
+            box-shadow: var(--shadow-lg);
+        }
+        
+        /* Data Tables */
+        .data-card {
+            background: var(--dark-surface);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 25px;
+            border: 1px solid var(--border-light);
+            transition: all var(--transition-speed) ease;
+        }
+        
+        .data-card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+            position: relative;
+            padding-left: 15px;
+        }
+        
+        .card-title:before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 20px;
+            width: 4px;
+            background: var(--gold-primary);
+            border-radius: 2px;
+        }
+        
+        .table {
+            color: var(--text-secondary);
+        }
+        
+        .table th {
+            background-color: var(--dark-elevated);
+            color: var(--text-primary);
+            font-weight: 600;
+            padding: 12px 15px;
+            border: none;
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        .table td {
+            padding: 12px 15px;
+            vertical-align: middle;
+            border-color: var(--border-light);
+        }
+        
+        .table-hover tbody tr {
+            transition: all var(--transition-speed) ease;
+        }
+        
+        .table-hover tbody tr:hover {
+            background-color: rgba(255,255,255,0.05);
+        }
+        
+        .badge {
+            background-color: rgba(255,255,255,0.1) !important;
+            color: var(--text-primary) !important;
+            border: 1px solid var(--border-medium);
+        }
+        
+        .bg-primary { background-color: var(--primary-dark) !important; }
+        .bg-success { background-color: var(--secondary-dark) !important; }
+        .bg-warning { background-color: rgba(234,179,8,0.2) !important; }
+        .bg-danger { background-color: rgba(239,68,68,0.2) !important; }
+        .bg-info { background-color: rgba(59,130,246,0.2) !important; }
+        
+        /* Security Alert */
+        .security-alert {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .security-alert i {
+            color: var(--danger);
+            font-size: 20px;
+            margin-right: 15px;
+        }
+        
+        .security-alert-content {
+            flex: 1;
+        }
+        
+        .security-alert h5 {
+            margin: 0 0 5px 0;
+            color: var(--danger);
+            font-size: 16px;
+        }
+        
+        .security-alert p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        /* DataTables Pagination Styling */
+        .dataTables_wrapper {
+            margin-top: 15px;
+            color: var(--text-muted);
+        }
+        
+        .dataTables_paginate {
+            margin-top: 20px !important;
+        }
+        
+        .dataTables_paginate .paginate_button {
+            padding: 6px 12px;
+            margin: 0 3px;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            color: var(--text-secondary) !important;
+            background: var(--dark-elevated) !important;
+            transition: all var(--transition-speed) ease;
+            text-decoration: none !important;
+        }
+        
+        .dataTables_paginate .paginate_button:hover {
+            background: var(--gold-primary) !important;
+            color: var(--dark-primary) !important;
+            border-color: var(--gold-primary);
+            transform: translateY(-2px);
+        }
+        
+        .dataTables_paginate .paginate_button.current {
+            background: var(--gold-primary) !important;
+            color: var(--dark-primary) !important;
+            border-color: var(--gold-primary);
+        }
+        
+        .dataTables_paginate .paginate_button.disabled,
+        .dataTables_paginate .paginate_button.disabled:hover {
+            background: var(--dark-secondary) !important;
+            color: var(--text-dim) !important;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .dataTables_info {
+            color: var(--text-muted);
+            padding-top: 12px !important;
+        }
+        
+        .dataTables_length select,
+        .dataTables_filter input {
+            background: var(--dark-elevated);
+            border: 1px solid var(--border-light);
+            color: var(--text-primary);
+            border-radius: 6px;
+            padding: 5px 10px;
+        }
+        
+        /* Footer */
+        .footer {
+            background: var(--dark-primary);
+            color: var(--text-secondary);
+            padding: 40px 0;
+            margin-top: 40px;
+            border-top: 1px solid var(--border-light);
+        }
+        
+        .footer h5 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--gold-primary);
+        }
+        
+        .footer-links {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+        
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all var(--transition-speed);
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .footer-links a i {
+            margin-right: 8px;
+            font-size: 14px;
+        }
+        
+        .footer-links a:hover {
+            color: var(--gold-primary);
+            transform: translateX(5px);
+        }
+        
+        .social-links a {
+            margin-right: 15px;
+            color: var(--text-muted);
+            font-size: 18px;
+            transition: all var(--transition-speed);
+        }
+        
+        .social-links a:hover {
+            color: var(--gold-primary);
+            transform: translateY(-3px);
+        }
+        
+        .copyright {
+            border-top: 1px solid var(--border-light);
+            padding-top: 20px;
+            margin-top: 20px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+        
+        /* Dropdowns */
+        .dropdown-menu {
+            background: var(--dark-surface);
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .dropdown-item {
+            color: var(--text-secondary);
+        }
+        
+        .dropdown-item:hover {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-primary);
+        }
+        
+        /* Buttons */
+        .btn-outline-primary {
+            border-color: var(--border-medium);
+            color: var(--text-secondary);
+        }
+        
+        .btn-outline-primary:hover {
+            background: var(--gold-primary);
+            border-color: var(--gold-primary);
+            color: var(--dark-primary);
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 992px) {
+            .sidebar {
+                left: -280px;
+                transition: left var(--transition-speed) ease;
+            }
+            
+            .sidebar.active {
+                left: 0;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            #sidebarToggle {
+                display: block !important;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .quick-actions {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-actions {
+                gap: 10px;
+            }
+        }
     </style>
 </head>
-
-<body class="theme-red">
-    <!-- Page Loader -->
-    <div class="page-loader-wrapper">
-        <div class="loader">
-            <div class="preloader">
-                <div class="spinner-layer pl-red">
-                    <div class="circle-clipper left">
-                        <div class="circle"></div>
-                    </div>
-                    <div class="circle-clipper right">
-                        <div class="circle"></div>
-                    </div>
-                </div>
+<body>
+    <!-- System Status Bar -->
+    <div class="system-status <?php echo $system_status; ?>">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div>
+                <i class="fas fa-circle me-2"></i>
+                <span>System Status: <?php echo ucfirst($system_status); ?> - <?php echo $system_message; ?></span>
             </div>
-            <p>Please wait...</p>
+            <div>
+                <small>Last updated: <?php echo date('Y-m-d H:i:s'); ?></small>
+            </div>
         </div>
     </div>
-    <div class="overlay"></div>
-<nav class="navbar">
-        <div class="container-fluid"style="background-color: black;">
-            <div class="navbar-header" >
-                <a href="javascript:void(0);" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse" aria-expanded="false"></a>
-                <a href="javascript:void(0);" class="bars"></a>
-                <a class="navbar-brand" href="dashboard.php" style="font-size: 18px;">Gold Coast Central Bank</a>
-            </div>
-            <div class="collapse navbar-collapse" id="navbar-collapse">
-                <ul class="nav navbar-nav navbar-right">
-                <li class="pull-right" ><a href="logout.php"><i class="fa fa-fw fa-sign-out fa-lg"></i> LogOut</a></li>
-                   <li class="pull-right"><a href="#bot"><i class="fa fa-fw fa-envelope fa-lg"></i> Contact</a></li>
-                    <!-- #END# Tasks -->
-                </ul>
-            </div>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <h2>Gold Coast Central Bank</h2>
+            <p>Secure Banking Solutions</p>
         </div>
+        
+        <div class="user-info">
+            <?php echo '<img src="data:image/jpeg;base64,'.base64_encode($_SESSION['img']).'" class="user-img" alt="User"/>' ?>
+            <div class="user-name"><?php echo $_SESSION['name'];?></div>
+            <div class="user-email"><?php echo $_SESSION['email'];?></div>
+            <div class="user-role"><?php echo $_SESSION['type'];?></div>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li><a href="dashboard.php" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+            <li><a href="#" class="menu-toggle"><i class="fas fa-users"></i> Employees</a>
+                <ul class="sub-menu">
+                    <li><a href="employee/emp_details.php?type=Admin">Admins</a></li>
+                    <li><a href="employee/emp_details.php?type=Employee">Employees</a></li>
+                </ul>
+            </li>
+            <li><a href="#" class="menu-toggle"><i class="fas fa-piggy-bank"></i> Accounts</a>
+                <ul class="sub-menu">
+                    <li><a href="employee/account_details.php?id=Current">Current Accounts</a></li>
+                    <li><a href="employee/account_details.php?id=Saving">Saving Accounts</a></li>
+                    <li><a href="employee/search.php">Search Accounts</a></li>
+                </ul>
+            </li>
+            <li><a href="employee/bank_balance.php"><i class="fas fa-landmark"></i> Bank Balance</a></li>
+            <li><a href="#" class="menu-toggle"><i class="fas fa-history"></i> History</a>
+                <ul class="sub-menu">
+                    <li><a href="employee/history_details.php?ty=Withdraw">Withdrawals</a></li>
+                    <li><a href="employee/history_details.php?ty=Deposit">Deposits</a></li>
+                    <li><a href="employee/history_details.php?ty=Transection">Transactions</a></li>
+                </ul>
+            </li>
+            <li><a href="security_logs.php"><i class="fas fa-shield-alt"></i> Security Center</a></li>
+            <li><a href="reports.php"><i class="fas fa-chart-bar"></i> Reports & Analytics</a></li>
+            <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
     </nav>
-    <!-- #Top Bar -->
-    <section>
-        <!-- Left Sidebar -->
-        <aside id="leftsidebar" class="sidebar">
-            <!-- User Info -->
-            <div class="user-info">
-                <div class="image">
-                <?php echo '<img src="data:image/jpeg;base64,'.base64_encode($_SESSION['img']) .'" width="50" height="50" alt="User"/>' ?>
-                </div>
-                <div class="info-container">
-                    <div class="name" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><?php echo $_SESSION['name'];?></div>
-                    <div class="email"><?php echo $_SESSION['email'];?></div>
-                    <div class="btn-group user-helper-dropdown">
-                        <i class="material-icons" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">more_vert</i>
-                        <ul class="dropdown-menu pull-right">
-                            <li><a href="employee/user_profile.php"><i class="material-icons">person</i>Profile</a></li>
-                            <li role="separator" class="divider"></li>
-                            <li><a href="employee/change_pin.php"><i class="material-icons">lock</i>Change Password</a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            <div class="menu">
-                <ul class="list">
-                    <li class="header">MAIN NAVIGATION</li>
-                    <li class="active">
-                        <a href="dashboard.php">
-                            <i class="material-icons">home</i>
-                            <span>Home</span>
-                        </a>
-                    </li>
-                   <?php 
-                   if($_SESSION['type']=="Admin" || $_SESSION["type"]=="Default"){
-                   ?>
-                    <li>
-                        <a href="javascript:void(0);" class="menu-toggle">
-                            <i class="material-icons">group</i>
-                            <span>Manage Employees</span>
-                        </a>
-                        <ul class="ml-menu">
-                            <li>
-                                <a href="employee/new_emp.php">Add Employee</a>
-                            </li>
-                            <li>
-                                <a href="employee/emp_list.php">Block Account</a>
-                            </li>
-                            <li>
-                                <a href="employee/emp_list.php">Employees List</a>
-                            </li>
-                            <li>
-                                <a href="employee/emp_list.php">Delete Employee</a>
-                            </li>
-                            <li>
-                                <a href="employee/emp_list.php">Search Employee</a>
-                            </li>
-                            <li>
-                                <a href="employee/emp_list.php">Activate Account</a>
-                            </li>
-                            <li>
-                                <a href="employee/emp_list.php">Update Employee</a>
-                            </li> 
-                        </ul>
-                    </li>
-                   <?php 
-               }
-                    ?>
-                    <li>
-                        <a href="javascript:void(0);" class="menu-toggle">
-                            <i class="material-icons">group</i>
-                            <span>Manage Accounts</span>
-                        </a>
-                        <ul class="ml-menu">
-                            <li>
-                                <a href="employee/newaccount.php">New Account</a>
-                            </li>
-                            <li>
-                                <a href="employee/search.php">Accounts List</a>
-                            </li>
-                            <li>
-                                <a href="employee/search.php">Delete Account</a>
-                            </li>
-                            <li>
-                                <a href="employee/search.php">Search Account</a>
-                            </li>
-                            <li>
-                                <a href="employee/search.php">Update Account</a>
-                            </li> 
-                        </ul>
-                    </li>
-                   <li>
-                        <a href="javascript:void(0);" class="menu-toggle">
-                            <i class="material-icons">manage_accounts</i>
-                            <span>Account Operations</span>
-                        </a>
-                        <ul class="ml-menu">
-                            <li>
-                                    <a href="employee/transfer.php">Transection</a>
-                                </li>
-                                <li>
-                                    <a href="employee/deposit.php">Deposit Balance</a>
-                                </li>
-                                <li>
-                                    <a href="employee/withdraw.php">Withdraw Balance</a>
-                                </li>   
-                            </ul>
-                    </li>
-                  
-                  <li>
-                        <a href="javascript:void(0);" class="menu-toggle">
-                            <i class="material-icons">person_add</i>
-                            <span>Account Queries</span>
-                        </a>
-                        <ul class="ml-menu">
-                                
-                                <li>
-                                    <a href="employee/history.php?id=">Transection History</a>
-                                </li>
-                                <li>
-                                    <a href="employee/check_balance.php">Check Current Balance</a>
-                                </li>
-                                <li>
-                                    <a href="employee/history.php?id=">Deposit Balance History</a>
-                                </li>
-                                <li>
-                                    <a href="employee/history.php?id=">Withdraw Balance History</a>
-                                </li>
-                            </ul>
-                    </li>
-                    <li>
-                        <a href="employee/bank_balance.php">
-                            <i class="material-icons">account_balance</i>
-                            <span>Bank Balance</span>
-                        </a>
-                    </li>
-                   <li>
-                        <a href="employee/user_profile.php">
-                            <i class="material-icons">person</i>
-                            <span>Account Profile</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="employee/change_pin.php">
-                            <i class="material-icons">lock</i>
-                            <span>Change Passowrd</span>
-                        </a>
-                    </li>
-    
-                </ul>
-            </div>
-        </aside>
-    </section>
 
-    <section class="content" id="top">
-        <div class="container-fluid">
-            <div class="block-header">
-                <h2>DASHBOARD</h2>
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <header class="top-header">
+            <div class="page-title">
+                <h1>Dashboard</h1>
+                <p>Overview of banking operations - <?php echo date('l, F j, Y'); ?></p>
             </div>
-            <?php if($_SESSION["type"]=="Employee"){
-            ?>
-            <div class="row clearfix">
-                
-                <div class="col-lg-4 col-md-3 col-sm-6 col-xs-12">
-                    <div class="info-box bg-pink hover-expand-effect">
-                        <div class="icon">
-                            <a href="employee/account_details.php?id=Current">
-                            <i class="material-icons">business_center</i>
-                        </a>
-                        </div>
-                        <div class="content">
-                            <div class="text">CURRENT ACCOUNTS </div>
-                            <div ><h4 style="margin-top: 5px; font-size: 20px;"><?php echo r_format("SELECT count(account_type) as total FROM accounts_info where account_type='Current'") ?></h4></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-3 col-sm-6 col-xs-12">
-                    <div class="info-box bg-light-green hover-expand-effect">
-                        <div class="icon">
-                            <a href="employee/account_details.php?id=Saving">
-                            <i class="material-icons">store</i>
-                        </a>
-                        </div>
-                        <div class="content">
-                            <div class="text">SAVING ACCOUNTS</div>
-                            <div ><h4 style="margin-top: 5px; font-size: 20px;"><?php echo r_format("SELECT count(account_type) as total FROM accounts_info where account_type='Saving'") ?></h4></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-3 col-sm-6 col-xs-12">
-                    <div class="info-box bg-orange hover-expand-effect">
-                        <div class="icon">
-                            <a href="employee/bank_balance.php">
-                            <i class="material-icons">account_balance</i>
-                        </a>
-                        </div>
-                        <div class="content">
-                            <div class="text">BANK BALANCE</div>
-                            <div ><h4 style="margin-top: 5px; font-size: 20px;"><?php echo rup_format("SELECT SUM(balance) as total FROM accounts_info") ?></h4></div>
-                        </div>
-                    </div>
-                </div>
+            <div class="header-actions">
+                <a href="#" id="sidebarToggle"><i class="fas fa-bars"></i></a>
+                <a href="notifications.php"><i class="fas fa-bell"></i> 
+                    <?php if($security_alerts_count > 0): ?>
+                    <span class="badge"><?php echo $security_alerts_count; ?></span>
+                    <?php endif; ?>
+                </a>
+                <a href="profile.php"><i class="fas fa-user-cog"></i></a>
+                <a href="logout.php" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
             </div>
-            <!--ddsds-->
-            <div class="row clearfix">
-                <div class="col-lg-4 col-md-3 col-sm-6 col-xs-12">
-                    <div class="info-box bg-purple hover-expand-effect">
-                        <div class="icon">
-                            <a href="employee/history_details.php?ty=Withdraw">
-                            <i class="material-icons">publish</i>
-                        </a>
-                        </div>
-                        <div class="content">
-                            <div class="text">WITHDRAW MONEY</div>
-                           <div ><h4 style="margin-top: 5px; font-size: 20px;"><?php echo rup_format("SELECT SUM(amount) as total FROM account_history where type='Withdraw'") ?></h4></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-3 col-sm-6 col-xs-12">
-                    <div class="info-box bg-cyan hover-expand-effect">
-                        <div class="icon">
-                             <a href="employee/history_details.php?ty=Deposit">
-                            <i class="material-icons">how_to_vote</i>
-                        </a>
-                        </div>
-                        <div class="content">
-                            <div class="text">DEPOSIT MONEY</div>
-                            <div ><h4 style="margin-top: 5px; font-size: 20px;"><?php echo rup_format("SELECT SUM(amount) as total FROM account_history where type='Deposit'") ?></h4></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-3 col-sm-6 col-xs-12">
-                    <div class="info-box bg-green hover-expand-effect">
-                        <div class="icon">
-                            <a href="employee/history_details.php?ty=Transection">
-                            <i class="material-icons">swap_horiz</i>
-                        </a>
-                        </div>
-                        <div class="content" id="bnk">
-                            <div class="text">TRANSECTION MONEY</div>
-                            <div ><h4 style="margin-top: 5px; font-size: 20px;"><?php echo rup_format("SELECT SUM(amount) as total FROM account_history where type='Transection'") ?></h4></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        </header>
 
-            <?php
-            }else if($_SESSION["type"]=="Admin" || $_SESSION["type"]=="Default"){
-            ?>
-            <div class="row clearfix">
-                <?php
-                if($_SESSION["type"]=="Default"){
-                ?>
-                <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
-                    <div class="info-box bg-brown hover-expand-effect">
-                        <div class="icon">
-                            <a href="employee/emp_details.php?type=Admin">
-                            <i class="material-icons">groups</i>
-                        </a>
-                        </div>
-                        <div class="content">
-                            <div class="text">CO-ADMINS</div>
-                            <div ><h4 style="margin-top: 5px; font-size: 20px;"><?php echo r_format("SELECT count(role) as total FROM users WHERE role='Admin'") ?></h4></div>
-                        </div>
-                    </div>
-                </div>
-                <?php
-               }
-            ?>
-                <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
-                    <div class="info-box bg-blue hover-expand-effect">
-                        <div class="icon">
-                            <a href="employee/emp_details.php?type=Employee">
-                            <i class="material-icons">how_to_reg</i>
-                        </a>
-                        </div>
-                        <div class="content">
-                            <div class="text">EMPLOYEES</div>
-                            <div ><h4 style="margin-top: 5px; font-size: 20px;"><?php echo r_format("SELECT count(role) as total FROM users WHERE role='Employee'") ?></h4></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
-                    <div class="info-box bg-pink hover-expand-effect">
-                        <div class="icon">
-                            <a href="employee/account_details.php?id=Current">
-                            <i class="material-icons">business_center</i>
-                        </a>
-                        </div>
-                        <div class="content">
-                            <div class="text">CURRENT ACCOUNTS </div>
-                            <div ><h4 style="margin-top: 5px; font-size: 20px;"><?php echo r_format("SELECT count(account_type) as total FROM accounts_info where account_type='Current'") ?></h4></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
-                    <div class="info-box bg-light-green hover-expand-effect">
-                        <div class="icon">
-                            <a href="employee/account_details.php?id=Saving">
-                            <i class="material-icons">store</i>
-                        </a>
-                        </div>
-                        <div class="content">
-                            <div class="text">SAVING ACCOUNTS</div>
-                            <div ><h4 style="margin-top: 5px; font-size: 20px;"><?php echo r_format("SELECT count(account_type) as total FROM accounts_info where account_type='Saving'") ?></h4></div>
-                        </div>
-                    </div>
-                </div>
-                <?php
-                if($_SESSION["type"]=="Admin"){
-                ?>
-                <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
-                    <div class="info-box bg-orange hover-expand-effect">
-                        <div class="icon">
-                            <a href="employee/bank_balance.php">
-                            <i class="material-icons">account_balance</i>
-                        </a>
-                        </div>
-                        <div class="content">
-                            <div class="text">BANK BALANCE</div>
-                            <div ><h4 style="margin-top: 5px; font-size: 20px;"><?php echo rup_format("SELECT SUM(balance) as total FROM accounts_info") ?></h4></div>
-                        </div>
-                    </div>
-                </div>
-                <?php
-                  }
-                ?>
-            </div>
-            <!--ddsds-->
-            <div class="row clearfix">
-                <?php
-                if($_SESSION["type"]=="Default"){
-                ?>
-                 <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
-                    <div class="info-box bg-orange hover-expand-effect">
-                        <div class="icon">
-                            <a href="employee/bank_balance.php">
-                            <i class="material-icons">account_balance</i>
-                        </a>
-                        </div>
-                        <div class="content">
-                            <div class="text">BANK BALANCE</div>
-                            <div ><h4 style="margin-top: 5px; font-size: 20px;"><?php echo rup_format("SELECT SUM(balance) as total FROM accounts_info") ?></h4></div>
-                        </div>
-                    </div>
-                </div>
-                <?php
-                  }
-                ?>
-                <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
-                    <div class="info-box bg-purple hover-expand-effect">
-                        <div class="icon">
-                            <a href="employee/history_details.php?ty=Withdraw">
-                            <i class="material-icons">publish</i>
-                        </a>
-                        </div>
-                        <div class="content">
-                            <div class="text">WITHDRAW MONEY</div>
-                           <div ><h4 style="margin-top: 5px; font-size: 20px;"><?php echo rup_format("SELECT SUM(amount) as total FROM account_history where type='Withdraw'") ?></h4></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
-                    <div class="info-box bg-cyan hover-expand-effect">
-                        <div class="icon">
-                             <a href="employee/history_details.php?ty=Deposit">
-                            <i class="material-icons">how_to_vote</i>
-                        </a>
-                        </div>
-                        <div class="content">
-                            <div class="text">DEPOSIT MONEY</div>
-                            <div ><h4 style="margin-top: 5px; font-size: 20px;"><?php echo rup_format("SELECT SUM(amount) as total FROM account_history where type='Deposit'") ?></h4></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
-                    <div class="info-box bg-green hover-expand-effect">
-                        <div class="icon">
-                            <a href="employee/history_details.php?ty=Transection">
-                            <i class="material-icons">swap_horiz</i>
-                        </a>
-                        </div>
-                        <div class="content" id="bnk">
-                            <div class="text">TRANSECTION MONEY</div>
-                            <div ><h4 style="margin-top: 5px; font-size: 20px;"><?php echo rup_format("SELECT SUM(amount) as total FROM account_history where type='Transection'") ?></h4></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <?php
-            }
-            ?>
-            <!-- #END# Widgets -->
-            <!-- CPU Usage -->
-            <!--  -->
-            <!-- #END# CPU Usage -->
-            <div></div>
-            <?php
-            if($_SESSION["type"]=="Admin" || $_SESSION["type"]=="Default"){
-            ?>
-            <div class="row clearfix" >
-            <div class="col-lg-12 grid-margin stretch-card">
-                <div class="card">
-                  <div class="card-body">
-                    <div class="header">
-                            <h2>EMPLOYEES INFO BOARD</h2>                        
-                        </div>
-                        <div  class="table-responsive"style="overflow:auto; max-height: 475px;">
-                    <table class="table table-striped" id="myTable">
-                       <?php
-                       if($_SESSION['type']=="Default"){
-                        $sql="SELECT c.* , p.* FROM users c,emp_details p WHERE c.id=p.id ORDER BY p.hier_date DESC";
-                        }else{
-                            $sql="SELECT c.* , p.* FROM users c,emp_details p WHERE c.id=p.id and c.role='Employee' ORDER BY p.hier_date DESC";
-                        }
-                        $result = mysqli_query($con,$sql);
-                        $num = (mysqli_query($con,$sql));
-                      ?>
-                      <thead>
-                        <tr style="text-align: center;">
-                          <th style="text-align: center; width: 10%;" >Employee ID</th>
-                          <th style="text-align: center; width: 17%;">Employee Name </th>
-                          <th style="text-align: center;width: 17%;">Father Name</th>
-                          <th style="text-align: center;width: 22%;">Email</th>
-                          <th style="text-align: center; width: 17%;">CNIC Number</th>
-                          <th style="text-align: center; width: 11%;"> Register Date</th>
-                          <th style="text-align: center; width: 6%;">Type</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <?php
-                        if(mysqli_num_rows($num)>0){
-                        while($row=mysqli_fetch_array ($result)){
-                            if($_SESSION['id']!=$row['id']){
-                        ?>
-                        <tr>
-                           <td style="text-align: center;"><?php echo $row['id'];?></td>
-                           <td style="text-align: center;"><?php echo $row['name'];?></td>
-                           <td style="text-align: center;"><?php echo $row['fname'];?></td>
-                           <td style="text-align: center;"><?php echo $row['email'];?></td>
-                           <td style="text-align: center;"><?php echo $row['cnic'];?></td>
-                           <td style="text-align: center;"><?php echo $row['hier_date'];?></td>
-                           <td style="text-align: center;"><?php echo $row['role'];?></td>
-                        </tr>
-                        <?php
-                        }
-                        }
-                        }else{
-                        ?>
-                        <tr>
-                        <td style="text-align: center;padding-top: 25px; font-size: 20px;" colspan="7">No any history found</td>
-                        </tr>
-                        <?php 
-                         }
-                         ?>
-                       </tbody>
-                    </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-          </div>
-           <?php
-            }
-            ?>
-            <div class="row clearfix" >
-            <div class="col-lg-12 grid-margin stretch-card">
-                <div class="card">
-                  <div class="card-body">
-                    <div class="header">
-                            <h2>ACCOUNTS INFO BOARD</h2>                        
-                        </div>
-                        <div  class="table-responsive"style="overflow:auto; max-height: 475px;">
-                    <table class="table table-striped" id="myTable">
-                       <?php
-                        $sql="SELECT c.* , p.* FROM accounts_info c,accountsholder p WHERE c.account=p.account ORDER BY c.registerdate DESC";
-                        $result = mysqli_query($con,$sql);
-                        $num = (mysqli_query($con,$sql));
-                      ?>
-                      <thead>
-                        <tr style="text-align: center;">
-                          <th style="text-align: center; width: 14%;" >Account Number</th>
-                          <th style="text-align: center; width: 16%;">Name </th>
-                          <th style="text-align: center;width: 16%;">Father Name</th>
-                          <th style="text-align: center;width: 19%;">Email</th>
-                          <th style="text-align: center; width: 15%;">CNIC Number</th>
-                          <th style="text-align: center; width: 10%;"> Register Date</th>
-                          <th style="text-align: center; width: 10%;">Account Type</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <?php
-                        if(mysqli_num_rows($num)>0){
-                        while($row=mysqli_fetch_array ($result)){
-                        ?>
-                        <tr>
-                           <td style="text-align: center;"><?php echo $row['account'];?></td>
-                           <td style="text-align: center;"><?php echo $row['name'];?></td>
-                           <td style="text-align: center;"><?php echo $row['fname'];?></td>
-                           <td style="text-align: center;"><?php echo $row['email'];?></td>
-                           <td style="text-align: center;"><?php echo $row['cnic'];?></td>
-                           <td style="text-align: center;"><?php echo $row['registerdate'];?></td>
-                           <td style="text-align: center;"><?php echo $row['account_type'];?></td>
-                        </tr>
-                        <?php
-                        }
-                        }else{
-                        ?>
-                        <tr>
-                        <td style="text-align: center;padding-top: 25px; font-size: 20px;" colspan="7">No any history found</td>
-                        </tr>
-                        <?php 
-                         }
-                         ?>
-                       </tbody>
-                    </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-          </div>
-            <div class="row clearfix" >
-            <div class="col-lg-12 grid-margin stretch-card">
-                <div class="card">
-                  <div class="card-body">
-                    <div class="header">
-                            <h2>ACCOUNTS HISTORY INFO BOARD</h2>                        
-                            <ul class="header-dropdown m-r--5">
-                                <li class="dropdown">
-                                    <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                                        <i class="material-icons">more_vert</i>
-                                    </a>
-                                    <ul class="dropdown-menu pull-right">
-                                        <li><a href="employee/history_details.php?ty=Transection">Transection history</a></li>
-                                        <li><a href="employee/history_details.php?ty=Recieved">Recieved history</a></li>
-                                        <li><a href="employee/history_details.php?ty=Withdraw">Withdrawal history</a></li>
-                                        <li><a href="employee/history_details.php?ty=Deposit">Deposit history</a></li>
-                                    </ul>
-                                </li>
-                            </ul>
-                        </div>
-                        <div  class="table-responsive"style="overflow:auto; max-height: 475px;">
-                    <table class="display table table-bordered" id="myTable" cellspacing="0">
-                       <?php
-                        $sql="SELECT c.* , p.* FROM accountsholder c,account_history p WHERE c.account=p.account ORDER BY no DESC";
-                        $result = mysqli_query($con,$sql);
-                        $num = (mysqli_query($con,$sql));
-                      ?>
-                      <thead>
-                        <tr style="text-align: center;">
-                          <th style="text-align: center;" > No </th>
-                          <th style="text-align: center;">Account Holder Name </th>
-                          <th style="text-align: center;">Account Number </th>
-                          <th style="text-align: center;"> History Type </th>
-                          <th style="text-align: center;"> Amount </th>
-                          <th style="text-align: center;"> Date</th>
-                          <th style="text-align: center;">Time </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <?php
-                        if(mysqli_num_rows($num)>0){
-                            $numb=1;
-                        while($row=mysqli_fetch_array ($result)){
-                        ?>
-                        <tr>
-                           <td style="text-align: center;"><?php echo $numb;?></td>
-                           <td style="text-align: center;"><?php echo $row['name'];?></td>
-                           <td style="text-align: center;"><?php echo $row['account'];?></td>
-                           <td style="text-align: center;"><?php echo $row['type'];?></td>
-                           <td style="text-align: center;"><?php echo $row['amount'].".00$";?></td>
-                           <td style="text-align: center;"><?php echo $row['dt'];?></td>
-                           <td style="text-align: center;"><?php echo $row['tm'];?></td>
-                        </tr>
-                        <?php
-                        $numb=$numb+1;
-                        }
-                        }else{
-                        ?>
-                        <tr>
-                        <td style="text-align: center;padding-top: 25px; font-size: 20px;" colspan="7">No any history found</td>
-                        </tr>
-                        <?php 
-                         }
-                         ?>
-                       </tbody>
-                    </table>
-                    </div>
-                  </div>
-                </div>
-              </div>
-          </div>
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <a href="employee/search.php" class="quick-action-btn">
+                <i class="fas fa-search"></i>
+                <span>Search Accounts</span>
+            </a>
+            <a href="employee/account_create.php" class="quick-action-btn">
+                <i class="fas fa-plus-circle"></i>
+                <span>Create Account</span>
+            </a>
+            <a href="transactions.php" class="quick-action-btn">
+                <i class="fas fa-exchange-alt"></i>
+                <span>New Transaction</span>
+            </a>
+            <a href="reports.php" class="quick-action-btn">
+                <i class="fas fa-chart-pie"></i>
+                <span>Generate Report</span>
+            </a>
         </div>
-<div class="row clearfix" id="not">
-    <div class="footer-basic" id="bot">
-        <footer>
-            <center><h4 style="margin-top: -15px;">Contact Us</h4></center>
-            <div class="social"><a href="https://www.instagram.com/amirghafoor786/"><i class="icon ion-social-instagram"></i></a><a href="#"><i class="icon ion-social-skype"></i></a><a href="https://twitter.com/AmirGha59143587"><i class="icon ion-social-twitter"></i></a><a href="https://web.facebook.com/amirghafoor.chaudhry/"><i class="icon ion-social-facebook"></i></a></div>
-          <hr style="height:1px;border-width:0; margin-top: -10px; color:gray;background-color:gray">
-            <ul class="list-inline">
-                <li class="list-inline-item"><a href="dashboard.php">Home</a></li>
-                <li class="list-inline-item"><a href="employee/about.php?type=Services">Services</a></li>
-                <li class="list-inline-item"><a href="employee/about.php?type=About">About</a></li>
-                <li class="list-inline-item"><a href="employee/about.php?type=Privacy">Privacy Notice</a></li>
-            </ul>
-            <hr style="height:1px;border-width:0; color:gray;background-color:gray">
-            <p class="copyright" style="margin-top: 0px;">Gold Coast Central Bank © DeepAI 2021</p>
-        </footer>
+
+        <!-- Security Alert -->
+        <?php if($security_alerts_count > 0): ?>
+        <div class="security-alert">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div class="security-alert-content">
+                <h5>Security Alert</h5>
+                <p><?php echo $security_alerts_count; ?> security issue(s) detected in the last 24 hours. <a href="security_logs.php" style="color: var(--danger); text-decoration: underline;">Review now</a></p>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <?php if($_SESSION["type"]=="Admin" || $_SESSION["type"]=="Default"){ ?>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <p class="stat-title">TOTAL ACCOUNTS</p>
+                <h3 class="stat-value"><?php echo r_format("SELECT count(account) as total FROM accounts_info") ?></h3>
+                <a href="employee/search.php" class="small">View Details <i class="fas fa-arrow-right"></i></a>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+                <p class="stat-title">TOTAL ADMINS</p>
+                <h3 class="stat-value"><?php echo r_format("SELECT count(role) as total FROM users WHERE role='Admin'") ?></h3>
+                <a href="employee/emp_details.php?type=Admin" class="small">View Details <i class="fas fa-arrow-right"></i></a>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-user-friends"></i>
+                </div>
+                <p class="stat-title">TOTAL EMPLOYEES</p>
+                <h3 class="stat-value"><?php echo r_format("SELECT count(role) as total FROM users WHERE role='Employee'") ?></h3>
+                <a href="employee/emp_details.php?type=Employee" class="small">View Details <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <?php } ?>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-building"></i>
+                </div>
+                <p class="stat-title">CURRENT ACCOUNTS</p>
+                <h3 class="stat-value"><?php echo r_format("SELECT count(account_type) as total FROM accounts_info where account_type='Current'") ?></h3>
+                <a href="employee/account_details.php?id=Current" class="small">View Details <i class="fas fa-arrow-right"></i></a>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-piggy-bank"></i>
+                </div>
+                <p class="stat-title">SAVING ACCOUNTS</p>
+                <h3 class="stat-value"><?php echo r_format("SELECT count(account_type) as total FROM accounts_info where account_type='Saving'") ?></h3>
+                <a href="employee/account_details.php?id=Saving" class="small">View Details <i class="fas fa-arrow-right"></i></a>
+            </div>
+            
+            <?php if($_SESSION["type"]=="Admin" || $_SESSION["type"]=="Default" || $_SESSION["type"]=="Employee"){ ?>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <p class="stat-title">TOTAL TRANSACTIONS</p>
+                <h3 class="stat-value"><?php echo $transaction_stats['total']; ?></h3>
+                <a href="employee/history_details.php?ty=Transection" class="small">View Details <i class="fas fa-arrow-right"></i></a>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-hand-holding-usd"></i>
+                </div>
+                <p class="stat-title">TOTAL WITHDRAWALS</p>
+                <h3 class="stat-value"><?php echo $transaction_stats['withdrawals']; ?></h3>
+                <a href="employee/history_details.php?ty=Withdraw" class="small">View Details <i class="fas fa-arrow-right"></i></a>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-money-check"></i>
+                </div>
+                <p class="stat-title">TOTAL DEPOSITS</p>
+                <h3 class="stat-value"><?php echo $transaction_stats['deposits']; ?></h3>
+                <a href="employee/history_details.php?ty=Deposit" class="small">View Details <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <?php } ?>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="chart-container">
+                    <div class="card-header">
+                        <h3 class="card-title">Transaction Overview</h3>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" id="chartDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                Last 7 Days
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="chartDropdown">
+                                <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
+                                <li><a class="dropdown-item" href="#">Last 30 Days</a></li>
+                                <li><a class="dropdown-item" href="#">Last 90 Days</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <canvas id="transactionChart"></canvas>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="chart-container">
+                    <div class="card-header">
+                        <h3 class="card-title">Account Distribution</h3>
+                    </div>
+                    <canvas id="accountDistributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="data-card">
+            <div class="card-header">
+                <h3 class="card-title">Recent Transactions</h3>
+                <a href="employee/history_details.php?ty=Transection" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover" id="recentTransactions">
+                    <thead>
+                        <tr>
+                            <th>Transaction ID</th>
+                            <th>Account</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $query = "SELECT h.*, t.name as type_name 
+                                  FROM account_history h 
+                                  JOIN transaction_types t ON h.type = t.id 
+                                  ORDER BY h.no DESC LIMIT 10";
+                        $result = mysqli_query($con, $query);
+                        if($result && mysqli_num_rows($result) > 0) {
+                            while($row = mysqli_fetch_assoc($result)){
+                                echo "<tr>";
+                                echo "<td>".$row['no']."</td>";
+                                echo "<td>".$row['account']."</td>";
+                                echo "<td>".$row['type_name']."</td>";
+                                echo "<td>$".number_format($row['amount'], 2)."</td>";
+                                echo "<td>".$row['dt']."</td>";
+                                echo "<td><span class='badge bg-success'>".$row['status']."</span></td>";
+                                echo "</tr>";
+                            }
+                        } else {
+                            echo "<tr><td colspan='6' class='text-center'>No transactions found</td></tr>";
+                        }
+                        ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Recent Security Events -->
+        <?php if(!empty($security_alerts)): ?>
+        <div class="data-card">
+            <div class="card-header">
+                <h3 class="card-title">Recent Security Events</h3>
+                <a href="security_logs.php" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover" id="securityEvents">
+                    <thead>
+                        <tr>
+                            <th>Event Type</th>
+                            <th>Description</th>
+                            <th>Severity</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach($security_alerts as $alert): ?>
+                        <tr>
+                            <td><?php echo $alert['event_type']; ?></td>
+                            <td><?php echo $alert['event_type']; ?> detected</td>
+                            <td><span class="badge bg-danger">Critical</span></td>
+                            <td><?php echo $alert['created_at']; ?></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
-</div>
-</section>
-<script src="plugins/jquery/jquery.min.js"></script>
 
-    <!-- Bootstrap Core Js -->
-    <script src="plugins/bootstrap/js/bootstrap.js"></script>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>Gold Coast Central Bank</h5>
+                    <p>Providing secure banking solutions since 1985. Your financial security is our top priority.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <h5>Quick Links</h5>
+                    <ul class="footer-links">
+                        <li><a href="#"><i class="fas fa-chevron-right"></i> About Us</a></li>
+                        <li><a href="#"><i class="fas fa-chevron-right"></i> Services</a></li>
+                        <li><a href="#"><i class="fas fa-chevron-right"></i> Contact</a></li>
+                        <li><a href="#"><i class="fas fa-chevron-right"></i> Support</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>Banking Services</h5>
+                    <ul class="footer-links">
+                        <li><a href="#"><i class="fas fa-chevron-right"></i> Personal Banking</a></li>
+                        <li><a href="#"><i class="fas fa-chevron-right"></i> Business Banking</a></li>
+                        <li><a href="#"><i class="fas fa-chevron-right"></i> Loans & Mortgages</a></li>
+                        <li><a href="#"><i class="fas fa-chevron-right"></i> Investment Services</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>Contact Info</h5>
+                    <ul class="footer-links">
+                        <li><i class="fas fa-map-marker-alt"></i> 123 Financial District, Gold Coast</li>
+                        <li><i class="fas fa-phone"></i> (123) 456-7890</li>
+                        <li><i class="fas fa-envelope"></i> support@goldcoastbank.com</li>
+                        <li><i class="fas fa-clock"></i> Mon-Fri: 9AM-5PM</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2023 Gold Coast Central Bank. All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></p>
+            </div>
+        </div>
+    </footer>
 
-    <!-- Slimscroll Plugin Js -->
-    <script src="plugins/jquery-slimscroll/jquery.slimscroll.js"></script>
-
-    <!-- Waves Effect Plugin Js -->
-    <script src="plugins/node-waves/waves.js"></script>
-
-    <!-- Jquery CountTo Plugin Js -->
-    <script src="plugins/jquery-countto/jquery.countTo.js"></script>
-
-    <!-- Morris Plugin Js -->
-    <script src="plugins/raphael/raphael.min.js"></script>
-    <script src="plugins/morrisjs/morris.js"></script>
-
-    <!-- ChartJs -->
-    <script src="plugins/chartjs/Chart.bundle.js"></script>
-
-    <!-- Flot Charts Plugin Js -->
-    <script src="plugins/flot-charts/jquery.flot.js"></script>
-    <script src="plugins/flot-charts/jquery.flot.resize.js"></script>
-    <script src="plugins/flot-charts/jquery.flot.pie.js"></script>
-    <script src="plugins/flot-charts/jquery.flot.categories.js"></script>
-    <script src="plugins/flot-charts/jquery.flot.time.js"></script>
-
-    <!-- Sparkline Chart Plugin Js -->
-    <script src="plugins/jquery-sparkline/jquery.sparkline.js"></script>
-
-    <!-- Custom Js -->
-    <script src="js/admin.js"></script>
-    <script src="js/pages/index.js"></script>
-
-    <!-- Demo Js -->
-    <script src="js/demo.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10.10.1/dist/sweetalert2.all.min.js"></script>
-    <script type="text/javascript" charset="utf-8">
-    $(document).ready(function() {
-      $('#myTable').dataTable();
-    });
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            // Initialize DataTables
+            $('#recentTransactions').DataTable({
+                "pageLength": 5,
+                "lengthMenu": [5, 10, 25, 50],
+                "order": [[0, "desc"]],
+                "language": {
+                    "search": "Search transactions:",
+                    "lengthMenu": "Show _MENU_ entries",
+                    "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+                    "paginate": {
+                        "previous": "Previous",
+                        "next": "Next"
+                    }
+                }
+            });
+            
+            $('#securityEvents').DataTable({
+                "pageLength": 5,
+                "lengthMenu": [5, 10, 25, 50],
+                "order": [[3, "desc"]],
+                "language": {
+                    "search": "Search events:",
+                    "lengthMenu": "Show _MENU_ entries",
+                    "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+                    "paginate": {
+                        "previous": "Previous",
+                        "next": "Next"
+                    }
+                }
+            });
+            
+            // Toggle sidebar on mobile
+            $('#sidebarToggle').click(function(e) {
+                e.preventDefault();
+                $('#sidebar').toggleClass('active');
+            });
+            
+            // Toggle submenus
+            $('.menu-toggle').click(function(e) {
+                e.preventDefault();
+                $(this).toggleClass('active').next('.sub-menu').toggleClass('active');
+            });
+            
+            // Transaction Chart
+            const transactionCtx = document.getElementById('transactionChart').getContext('2d');
+            const transactionChart = new Chart(transactionCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [
+                        {
+                            label: 'Deposits',
+                            data: [12500, 19000, 18000, 22000, 21000, 15000, 18000],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.3,
+                            fill: true
+                        },
+                        {
+                            label: 'Withdrawals',
+                            data: [10000, 12000, 15000, 13000, 17000, 14000, 16000],
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            tension: 0.3,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: '#cbd5e1'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgable(255, 255, 255, 0.05)'
+                            },
+                            ticks: {
+                                color: '#94a3b8',
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Account Distribution Chart
+            const accountCtx = document.getElementById('accountDistributionChart').getContext('2d');
+            const accountChart = new Chart(accountCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Current Accounts', 'Saving Accounts'],
+                    datasets: [{
+                        data: [65, 35],
+                        backgroundColor: [
+                            '#3b82f6',
+                            '#10b981'
+                        ],
+                        borderColor: [
+                            '#1e40af',
+                            '#059669'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#cbd5e1',
+                                padding: 15
+                            }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+            
+            // Auto-refresh dashboard every 5 minutes
+            setInterval(function() {
+                // Just reload the page for simplicity
+                location.reload();
+            }, 300000);
+        });
     </script>
-<?php
-if(isset($_SESSION['status']) && $_SESSION['status']!=''){
-
-?>
-<script type="text/javascript">
-  Swal.fire({
-  position: 'top-center',
-  icon: '<?php echo $_SESSION['code']?>',
-  title: '<?php echo $_SESSION['status']?>',
-  showConfirmButton: false,
-  timer: 4000
-});
-</script>
-<?php
- unset($_SESSION['status']);
-}
-?>
-
 </body>
-
 </html>

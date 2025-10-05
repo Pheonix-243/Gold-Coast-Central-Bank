@@ -57,7 +57,7 @@ if ($maxAmount) {
 }
 
 if ($direction === 'in') {
-    $sql .= " AND h.reciever = ? AND h.account = h.reciever";
+    $sql .= " AND h.receiver = ? AND h.account = h.receiver";
     $params[] = $_SESSION['client_account'];
     $paramTypes .= "s";
 } elseif ($direction === 'out') {
@@ -93,7 +93,7 @@ $totalPages = ceil($totalRows / $perPage);
 if (mysqli_num_rows($transactions) > 0): 
     while ($row = mysqli_fetch_assoc($transactions)):
         $isOutgoing = $row['sender'] == $_SESSION['client_account'];
-        $isIncoming = $row['reciever'] == $_SESSION['client_account'];
+        $isIncoming = $row['receiver'] == $_SESSION['client_account'];
         $typeName = $row['type_name'];
         $peerName = $isOutgoing ? $row['r_name'] : $row['s_name'];
         $directionText = $isOutgoing ? 'To' : 'From';

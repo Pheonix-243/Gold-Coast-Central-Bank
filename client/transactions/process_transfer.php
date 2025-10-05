@@ -81,7 +81,7 @@ try {
     $senderType = 1; // Transfer
     
     $sql = "INSERT INTO account_history 
-            (account, sender, s_name, reciever, r_name, type, amount, reference_number, status, description, dt, tm)
+            (account, sender, s_name, receiver, r_name, type, amount, reference_number, status, description, dt, tm)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     $stmt = mysqli_prepare($con, $sql);
     
@@ -105,7 +105,7 @@ try {
     if ($transferType === 'internal') {
         $receiverType = 2; // Payment Received
         $sql = "INSERT INTO account_history 
-                (account, sender, s_name, reciever, r_name, type, amount, reference_number, status, description, dt, tm)
+                (account, sender, s_name, receiver, r_name, type, amount, reference_number, status, description, dt, tm)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = mysqli_prepare($con, $sql);
         

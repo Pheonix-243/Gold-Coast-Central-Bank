@@ -1,7 +1,7 @@
 <?php
 session_start();
 include '../conn.php';
-include 'email.php';
+include '../email.php';
 
 function OTP($n) {
     $generator = "1357902468";

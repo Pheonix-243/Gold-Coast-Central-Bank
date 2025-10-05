@@ -26,7 +26,7 @@ if (isset($_POST['transfer'])){
     $regisdate=date("Y-m-d");
     $tms = date("h:i:s");
     $tms1 = date("Y-m-d h:i:s");
-    mysqli_query($con,"INSERT INTO account_history(account,sender,s_name,reciever,r_name,dt,tm,type,amount) VALUES('$acc','$acc','$name','null','null','$regisdate','$tms','Withdraw','$newbnc')");
+    mysqli_query($con,"INSERT INTO account_history(account,sender,s_name,receiver,r_name,dt,tm,type,amount) VALUES('$acc','$acc','$name','null','null','$regisdate','$tms','Withdraw','$newbnc')");
     $connected = @fsockopen("www.google.com", 80); 
     if ($connected){
       $msg="Hello dear ".$name."! You have withdraw balance from your SKY BANK account  on ".$tms1.". Amount ".$newbnc.".00$ withdraw successfully. Your remaining account balance is ".$bnc1.".00$. Thank you for joining SKY BANK service.";

@@ -358,8 +358,8 @@ input[type="date"]:valid::before {
                       <tr style="text-align: center;" class="tb">
                           <th style="text-align: center; width: 15%;">Name</th>
                           <th style="text-align: center; width: 13%;">Account Number</th>
-                          <th style="text-align: center; width: 17%;">Sender / Reciever Account</th>
-                          <th style="text-align: center; width: 17%;">Sender / Reciever Name</th>
+                          <th style="text-align: center; width: 17%;">Sender / receiver Account</th>
+                          <th style="text-align: center; width: 17%;">Sender / receiver Name</th>
                           <th style="text-align: center; width: 13%;">Date & Time</th>
                           <th style="text-align: center; width: 12%;">History Type</th>
                           <th style="text-align: center;width: 13%;">Amount</th>
@@ -385,7 +385,7 @@ input[type="date"]:valid::before {
                           <?php
                           if ($row['type']=="Transection") {
                           ?>
-                          <td style="text-align: center;padding-top: 25px;"><?php echo $row['reciever'];?></td>
+                          <td style="text-align: center;padding-top: 25px;"><?php echo $row['receiver'];?></td>
                           <td style="text-align: center;padding-top: 25px;"><?php echo $row['r_name'];?></td>
                           <?php
                           }else if($row['type']=="Recieved"){

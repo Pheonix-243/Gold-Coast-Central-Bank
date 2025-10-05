@@ -7,7 +7,7 @@ if (!isset($_SESSION['client_loggedin']) || $_SESSION['client_loggedin'] !== tru
     exit;
 }
 
-require_once('../../conn.php');
+require_once('conn.php');
 
 // Verify session data exists
 if (!isset($_SESSION['client_account'])) {

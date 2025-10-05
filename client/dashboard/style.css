@@ -184,7 +184,7 @@ body {
 
 /* Layout */
 .container {
-    display: flex;
+    display: block;
     min-height: 100vh;
     position: relative;
 }
@@ -197,9 +197,13 @@ body {
     display: flex;
     flex-direction: column;
     box-shadow: var(--shadow-xl);
-    position: relative;
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
     z-index: var(--z-fixed);
     transition: var(--transition);
+    overflow-y: auto;
 }
 
 .sidebar::before {
@@ -442,12 +446,14 @@ body {
 
 /* Main Content */
 .main_content {
-    flex: 1;
+    margin-left: 280px;
     display: flex;
     flex-direction: column;
     background: var(--bg-primary);
     overflow-y: auto;
     position: relative;
+    min-height: 100vh;
+    width: calc(100% - 280px);
 }
 
 /* Topbar */
@@ -549,8 +555,15 @@ body {
 }
 
 @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
 }
 
 /* Content Section */
@@ -603,8 +616,15 @@ body {
 }
 
 @keyframes float {
-    0%, 100% { transform: translate(25%, -25%) rotate(0deg); }
-    50% { transform: translate(30%, -20%) rotate(5deg); }
+
+    0%,
+    100% {
+        transform: translate(25%, -25%) rotate(0deg);
+    }
+
+    50% {
+        transform: translate(30%, -20%) rotate(5deg);
+    }
 }
 
 .premium-balance-card:hover {
@@ -638,7 +658,8 @@ body {
 }
 
 .balance-visibility-btn,
-.menu-trigger, .view_account_no {
+.menu-trigger,
+.view_account_no {
     background: rgba(255, 255, 255, 0.1);
     border: none;
     color: var(--text-white);
@@ -1674,6 +1695,7 @@ aside {
     background: rgba(255, 255, 255, 0.2);
     transform: translateY(-1px);
 }
+
 .notification-dropdown {
     display: none;
     position: absolute;
@@ -1919,11 +1941,11 @@ aside {
         grid-template-columns: 1fr;
         gap: var(--space-lg);
     }
-    
+
     .quick-actions-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-    
+
     .analytics-cards {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -1938,47 +1960,48 @@ aside {
         z-index: var(--z-modal);
         transition: left var(--transition);
     }
-    
+
     .sidebar.show_sidebar {
         left: 0;
     }
-    
+
+    .main_content {
+        margin-left: 0;
+        width: 100%;
+    }
+
     #menu_btn {
         display: flex;
     }
-    
+
     #btn_close {
         display: flex;
     }
-    
-    .main_content {
-        width: 100%;
-    }
-    
+
     .topbar {
         padding: var(--space-md) var(--space-lg);
     }
-    
+
     .overview_text h1 {
         font-size: var(--font-size-2xl);
     }
-    
+
     .content_section {
         padding: var(--space-lg) var(--space-md);
     }
-    
+
     .premium-balance-card {
         padding: var(--space-lg);
     }
-    
+
     .quick-actions-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .analytics-cards {
         grid-template-columns: 1fr;
     }
-    
+
     .notification-dropdown {
         width: 280px;
         right: -20px;
@@ -1989,47 +2012,47 @@ aside {
     .topbar {
         padding: var(--space-sm) var(--space-md);
     }
-    
+
     .content_section {
         padding: var(--space-md);
         gap: var(--space-md);
     }
-    
+
     .premium-balance-card {
         padding: var(--space-md);
     }
-    
+
     .balance-card-header {
         flex-direction: column;
         align-items: flex-start;
         gap: var(--space-sm);
     }
-    
+
     .main-balance {
         flex-direction: column;
         align-items: flex-start;
         gap: 4px;
     }
-    
+
     .amount {
         font-size: var(--font-size-3xl);
     }
-    
+
     .account-details-premium {
         flex-direction: column;
         align-items: flex-start;
         gap: var(--space-sm);
     }
-    
+
     .notification-dropdown {
         width: calc(100vw - 40px);
         right: -10px;
     }
-    
+
     .transaction_item {
         padding: var(--space-sm);
     }
-    
+
     .transaction_icon {
         width: 32px;
         height: 32px;
@@ -2047,13 +2070,14 @@ aside {
 
 /* Print Styles */
 @media print {
+
     .sidebar,
     .topbar_icons,
     .notification-dropdown,
     .premium-support-card {
         display: none !important;
     }
-    
+
     .main_content {
         width: 100% !important;
     }

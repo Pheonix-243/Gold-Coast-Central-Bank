@@ -12,8 +12,8 @@ $sql = "SELECT h.*, t.name as type_name,
         FROM account_history h
         JOIN transaction_types t ON h.type = t.id
         LEFT JOIN accountsholder sender ON h.sender = sender.account
-        LEFT JOIN accountsholder receiver ON h.reciever = receiver.account
-        WHERE h.no = ? AND (h.account = ? OR h.sender = ? OR h.reciever = ?)";
+        LEFT JOIN accountsholder receiver ON h.receiver = receiver.account
+        WHERE h.no = ? AND (h.account = ? OR h.sender = ? OR h.receiver = ?)";
 $stmt = mysqli_prepare($con, $sql);
 mysqli_stmt_bind_param($stmt, "isss", $transactionId, 
     $_SESSION['client_account'], 
@@ -190,7 +190,7 @@ $transactionTime = date('h:i A', strtotime($transaction['tm']));
                     <span class="detail-label">Sent To:</span>
                     <span class="detail-value">
                         <?= htmlspecialchars($transaction['receiver_fullname']) ?><br>
-                        <?= htmlspecialchars($transaction['reciever']) ?>
+                        <?= htmlspecialchars($transaction['receiver']) ?>
                     </span>
                 </div>
                 <?php else: ?>
