@@ -52,8 +52,11 @@ $stmt->close();
 $sql = "SELECT 
             COALESCE(sc.name, 'Uncategorized') AS category, 
             COALESCE(sc.id, 0) AS category_id,
+            COALESCE(sc.color, '#6B7280') AS color,
+            COALESCE(sc.icon, 'fas fa-tag') AS icon,
             SUM(CASE WHEN h.sender = ? THEN h.amount ELSE 0 END) AS amount,
-            COUNT(CASE WHEN h.sender = ? THEN 1 END) AS count
+            COUNT(CASE WHEN h.sender = ? THEN 1 END) AS count,
+            AVG(CASE WHEN h.sender = ? THEN ABS(h.amount) ELSE NULL END) AS avg_amount
         FROM 
             account_history h
         LEFT JOIN 
@@ -61,13 +64,15 @@ $sql = "SELECT
         WHERE 
             h.account = ? $dateCondition
         GROUP BY 
-            sc.id, sc.name
+            sc.id, sc.name, sc.color, sc.icon
+        HAVING 
+            amount < 0
         ORDER BY 
-            amount ASC";
+            ABS(amount) DESC";
 
 $stmt = $con->prepare($sql);
 db_error($stmt);
-$stmt->bind_param("sss", $account, $account, $account);
+$stmt->bind_param("ssss", $account, $account, $account, $account);
 $stmt->execute();
 $categorySpendingArr = [];
 $res = $stmt->get_result();
@@ -194,7 +199,7 @@ while ($row = $res->fetch_assoc()) {
 }
 $stmt->close();
 
-// 7. Get velocity and frequency metrics (FIXED - removed PERCENTILE_CONT)
+// 7. Get velocity and frequency metrics
 $sql = "SELECT 
             COUNT(*) AS total_tx,
             SUM(CASE WHEN sender = ? THEN 1 ELSE 0 END) AS outgoing_tx,
@@ -243,37 +248,6 @@ if (!empty($amounts)) {
     }
 }
 $velocityMetrics['median_amount'] = $medianAmount;
-
-// 8. Get category trends (current vs previous period)
-$prevDateCondition = str_replace('CURDATE()', 'DATE_SUB(CURDATE(), INTERVAL 1 MONTH)', $dateCondition);
-$sql = "SELECT 
-            COALESCE(sc.name, 'Uncategorized') AS category,
-            SUM(CASE WHEN h.sender = ? THEN h.amount ELSE 0 END) AS current_amount,
-            (SELECT SUM(amount) FROM account_history h2 
-             LEFT JOIN spending_categories sc2 ON h2.category_id = sc2.id 
-             WHERE h2.account = ? AND h2.sender = ? AND COALESCE(sc2.name, 'Uncategorized') = COALESCE(sc.name, 'Uncategorized')
-             $prevDateCondition) AS previous_amount
-        FROM 
-            account_history h
-        LEFT JOIN 
-            spending_categories sc ON h.category_id = sc.id
-        WHERE 
-            h.account = ? $dateCondition
-        GROUP BY 
-            sc.id, sc.name
-        HAVING 
-            current_amount < 0 OR previous_amount < 0";
-
-$stmt = $con->prepare($sql);
-db_error($stmt);
-$stmt->bind_param("ssss", $account, $account, $account, $account);
-$stmt->execute();
-$categoryTrends = [];
-$res = $stmt->get_result();
-while ($row = $res->fetch_assoc()) {
-    $categoryTrends[] = $row;
-}
-$stmt->close();
 
 // Helper: get top category
 $topCategory = '';
@@ -339,8 +313,6 @@ foreach ($topRecipientsArr as $recipient) {
     ];
 }
 ?>
-
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -598,10 +570,10 @@ foreach ($topRecipientsArr as $recipient) {
                     <div class="col-span-6">
                         <div class="analytics-card">
                             <div class="analytics-card-header">
-                                <h2 class="analytics-card-title">Category Breakdown</h2>
+                                <h2 class="analytics-card-title">Category Distribution</h2>
                             </div>
                             <div class="chart-container">
-                                <canvas id="categoryTrendsChart"></canvas>
+                                <canvas id="categoryBarChart"></canvas>
                             </div>
                         </div>
                     </div>
@@ -741,21 +713,20 @@ foreach ($topRecipientsArr as $recipient) {
                         </div>
                         <?php endif; ?>
                         
-                
-<?php if ($velocityMetrics['median_amount'] > 0): ?>
-<div class="col-span-4">
-    <div class="insight-card">
-        <div class="insight-title">
-            <i class="fas fa-balance-scale"></i>
-            <span>Typical Transaction Size</span>
-        </div>
-        <div class="insight-value">
-            Your median transaction amount is <strong>GHC<?= number_format($velocityMetrics['median_amount'], 2) ?></strong>, 
-            with most transactions falling in this range.
-        </div>
-    </div>
-</div>
-<?php endif; ?>
+                        <?php if ($velocityMetrics['median_amount'] > 0): ?>
+                        <div class="col-span-4">
+                            <div class="insight-card">
+                                <div class="insight-title">
+                                    <i class="fas fa-balance-scale"></i>
+                                    <span>Typical Transaction Size</span>
+                                </div>
+                                <div class="insight-value">
+                                    Your median transaction amount is <strong>GHC<?= number_format($velocityMetrics['median_amount'], 2) ?></strong>, 
+                                    with most transactions falling in this range.
+                                </div>
+                            </div>
+                        </div>
+                        <?php endif; ?>
                         
                         <?php if ($savingsRate > 0): ?>
                         <div class="col-span-4">
@@ -814,7 +785,6 @@ const analyticsData = {
     categorySpending: <?= json_encode($categorySpendingArr) ?>,
     monthlyTrends: <?= json_encode($monthlyTrendsData) ?>,
     topRecipients: <?= json_encode($topRecipientsArr) ?>,
-    categoryTrends: <?= json_encode($categoryTrends) ?>,
     period: '<?= $period ?>',
     accountInfo: <?= json_encode($accountInfo) ?>
 };
@@ -843,7 +813,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Initialize all charts
   initializeCashFlowChart();
   initializeSpendingPieChart();
-  initializeCategoryTrendsChart();
+  initializeCategoryBarChart();
   initializeVelocityChart();
   initializeRecipientsChart();
 
@@ -863,7 +833,13 @@ function setupPeriodSelector() {
   periodBtns.forEach((btn) => {
     btn.addEventListener("click", function () {
       const period = this.getAttribute("data-period");
-      window.location.href = `analytics.php?period=${period}`;
+      // Update active state
+      periodBtns.forEach((b) => b.classList.remove("active"));
+      this.classList.add("active");
+      // Reload page with new period
+      const url = new URL(window.location);
+      url.searchParams.set("period", period);
+      window.location.href = url.toString();
     });
   });
 }
@@ -871,37 +847,35 @@ function setupPeriodSelector() {
 // Refresh button functionality
 function setupRefreshButton() {
   const refreshBtn = document.getElementById("refresh-data");
-  refreshBtn.addEventListener("click", function () {
-    this.classList.add("fa-spin");
-    setTimeout(() => {
-      window.location.reload();
-    }, 1000);
-  });
+  if (refreshBtn) {
+    refreshBtn.addEventListener("click", function () {
+      // Add loading animation
+      this.classList.add("fa-spin");
+      // Reload page after a short delay
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    });
+  }
 }
 
 // Update last updated time
 function updateLastUpdatedTime() {
-  const now = new Date();
-  const timeString = now.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
-  document.getElementById(
-    "last-updated"
-  ).textContent = `Last updated: ${timeString}`;
+  const lastUpdatedEl = document.getElementById("last-updated");
+  if (lastUpdatedEl) {
+    const now = new Date();
+    lastUpdatedEl.textContent = `Updated: ${now.toLocaleTimeString()}`;
+  }
 }
 
 // Cash Flow Timeline Chart
 function initializeCashFlowChart() {
-  const ctx = document.getElementById("cashFlowChart").getContext("2d");
-  const data = analyticsData.velocityData;
+  const ctx = document.getElementById("cashFlowChart");
+  if (!ctx) return;
 
+  const data = analyticsData.velocityData;
   if (!data || data.length === 0) {
-    showNoDataMessage(
-      "cashFlowChart",
-      "No transaction data available for the selected period"
-    );
+    ctx.parentElement.innerHTML = '<div class="no-data"><i class="fas fa-chart-line"></i><p>No cash flow data available</p></div>';
     return;
   }
 
@@ -951,31 +925,19 @@ function initializeCashFlowChart() {
       },
       scales: {
         x: {
-          type: "time",
-          time: {
-            unit:
-              analyticsData.period === "7d"
-                ? "day"
-                : analyticsData.period === "30d"
-                ? "week"
-                : "month",
-          },
+          display: true,
           title: {
             display: true,
             text: "Date",
           },
         },
         y: {
-          beginAtZero: true,
+          display: true,
           title: {
             display: true,
             text: "Amount (GHC)",
           },
-          ticks: {
-            callback: function (value) {
-              return "GHC" + value;
-            },
-          },
+          beginAtZero: true,
         },
       },
     },
@@ -984,33 +946,27 @@ function initializeCashFlowChart() {
 
 // Spending by Category Pie Chart
 function initializeSpendingPieChart() {
-  const ctx = document.getElementById("spendingPieChart").getContext("2d");
+  const ctx = document.getElementById("spendingPieChart");
+  if (!ctx) return;
+
   const categoryData = analyticsData.categorySpending;
-
-  // Filter only spending categories (negative amounts) and with actual spending
-  const spendingCategories = categoryData.filter(
-    (item) => item.amount < 0 && Math.abs(item.amount) > 0
-  );
-
-  if (spendingCategories.length === 0) {
-    showNoDataMessage(
-      "spendingPieChart",
-      "No categorized spending data available"
-    );
+  if (!categoryData || categoryData.length === 0) {
+    ctx.parentElement.innerHTML = '<div class="no-data"><i class="fas fa-chart-pie"></i><p>No category data available</p></div>';
     return;
   }
 
-  const labels = spendingCategories.map((item) => item.category);
-  const data = spendingCategories.map((item) => Math.abs(item.amount));
+  const labels = categoryData.map((item) => item.category);
+  const amounts = categoryData.map((item) => Math.abs(item.amount));
+  const backgroundColors = categoryData.map((item, index) => item.color || categoryColors[index % categoryColors.length]);
 
   new Chart(ctx, {
-    type: "doughnut",
+    type: "pie",
     data: {
       labels: labels,
       datasets: [
         {
-          data: data,
-          backgroundColor: categoryColors,
+          data: amounts,
+          backgroundColor: backgroundColors,
           borderWidth: 2,
           borderColor: "#fff",
         },
@@ -1026,12 +982,9 @@ function initializeSpendingPieChart() {
         tooltip: {
           callbacks: {
             label: function (context) {
-              const value = context.raw;
-              const total = context.dataset.data.reduce((a, b) => a + b, 0);
-              const percentage = ((value / total) * 100).toFixed(1);
-              return `${context.label}: GHC${value.toFixed(
-                2
-              )} (${percentage}%)`;
+              const total = amounts.reduce((a, b) => a + b, 0);
+              const percentage = ((context.raw / total) * 100).toFixed(1);
+              return `${context.label}: GHC${context.raw.toFixed(2)} (${percentage}%)`;
             },
           },
         },
@@ -1040,43 +993,20 @@ function initializeSpendingPieChart() {
   });
 }
 
-// Category Trends Chart
-function initializeCategoryTrendsChart() {
-  const ctx = document.getElementById("categoryTrendsChart").getContext("2d");
-  const categoryTrends = analyticsData.categoryTrends;
+// Category Distribution Bar Chart
+function initializeCategoryBarChart() {
+  const ctx = document.getElementById("categoryBarChart");
+  if (!ctx) return;
 
-  if (!categoryTrends || categoryTrends.length === 0) {
-    showNoDataMessage(
-      "categoryTrendsChart",
-      "No category trend data available"
-    );
+  const categoryData = analyticsData.categorySpending;
+  if (!categoryData || categoryData.length === 0) {
+    ctx.parentElement.innerHTML = '<div class="no-data"><i class="fas fa-chart-bar"></i><p>No category data available</p></div>';
     return;
   }
 
-  // Prepare data for current vs previous period comparison
-  const labels = [];
-  const currentData = [];
-  const previousData = [];
-
-  categoryTrends.forEach((trend) => {
-    if (
-      trend.category &&
-      (Math.abs(trend.current_amount) > 0 ||
-        Math.abs(trend.previous_amount) > 0)
-    ) {
-      labels.push(trend.category);
-      currentData.push(Math.abs(trend.current_amount));
-      previousData.push(Math.abs(trend.previous_amount || 0));
-    }
-  });
-
-  if (labels.length === 0) {
-    showNoDataMessage(
-      "categoryTrendsChart",
-      "No category trend data available"
-    );
-    return;
-  }
+  const labels = categoryData.map((item) => item.category);
+  const amounts = categoryData.map((item) => Math.abs(item.amount));
+  const backgroundColors = categoryData.map((item, index) => item.color || categoryColors[index % categoryColors.length]);
 
   new Chart(ctx, {
     type: "bar",
@@ -1084,14 +1014,10 @@ function initializeCategoryTrendsChart() {
       labels: labels,
       datasets: [
         {
-          label: "Current Period",
-          data: currentData,
-          backgroundColor: chartColors.primary,
-        },
-        {
-          label: "Previous Period",
-          data: previousData,
-          backgroundColor: chartColors.gray,
+          label: "Amount Spent",
+          data: amounts,
+          backgroundColor: backgroundColors,
+          borderWidth: 0,
         },
       ],
     },
@@ -1100,26 +1026,27 @@ function initializeCategoryTrendsChart() {
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          position: "top",
+          display: false,
+        },
+        tooltip: {
+          callbacks: {
+            label: function (context) {
+              return `GHC${context.raw.toFixed(2)}`;
+            },
+          },
         },
       },
       scales: {
-        x: {
-          title: {
-            display: true,
-            text: "Categories",
-          },
-        },
         y: {
           beginAtZero: true,
           title: {
             display: true,
             text: "Amount (GHC)",
           },
+        },
+        x: {
           ticks: {
-            callback: function (value) {
-              return "GHC" + value;
-            },
+            maxRotation: 45,
           },
         },
       },
@@ -1129,19 +1056,17 @@ function initializeCategoryTrendsChart() {
 
 // Transaction Velocity Chart
 function initializeVelocityChart() {
-  const ctx = document.getElementById("velocityChart").getContext("2d");
-  const velocityData = analyticsData.velocityData;
+  const ctx = document.getElementById("velocityChart");
+  if (!ctx) return;
 
+  const velocityData = analyticsData.velocityData;
   if (!velocityData || velocityData.length === 0) {
-    showNoDataMessage(
-      "velocityChart",
-      "No transaction velocity data available"
-    );
+    ctx.parentElement.innerHTML = '<div class="no-data"><i class="fas fa-running"></i><p>No velocity data available</p></div>';
     return;
   }
 
   const dates = velocityData.map((item) => item.date);
-  const transactionCounts = velocityData.map((item) => item.count);
+  const counts = velocityData.map((item) => item.count);
 
   new Chart(ctx, {
     type: "bar",
@@ -1150,10 +1075,9 @@ function initializeVelocityChart() {
       datasets: [
         {
           label: "Transactions per Day",
-          data: transactionCounts,
-          backgroundColor: chartColors.info,
-          borderColor: chartColors.primary,
-          borderWidth: 1,
+          data: counts,
+          backgroundColor: chartColors.primary,
+          borderWidth: 0,
         },
       ],
     },
@@ -1164,26 +1088,26 @@ function initializeVelocityChart() {
         legend: {
           display: false,
         },
-      },
-      scales: {
-        x: {
-          type: "time",
-          time: {
-            unit: analyticsData.period === "7d" ? "day" : "week",
-          },
-          title: {
-            display: true,
-            text: "Date",
+        tooltip: {
+          callbacks: {
+            label: function (context) {
+              return `${context.raw} transactions`;
+            },
           },
         },
+      },
+      scales: {
         y: {
           beginAtZero: true,
           title: {
             display: true,
             text: "Number of Transactions",
           },
-          ticks: {
-            stepSize: 1,
+        },
+        x: {
+          title: {
+            display: true,
+            text: "Date",
           },
         },
       },
@@ -1193,88 +1117,48 @@ function initializeVelocityChart() {
 
 // Top Recipients Chart
 function initializeRecipientsChart() {
-  const ctx = document.getElementById("recipientsChart").getContext("2d");
-  const recipients = analyticsData.topRecipients;
+  const ctx = document.getElementById("recipientsChart");
+  if (!ctx) return;
 
-  if (!recipients || recipients.length === 0) {
-    return; // No chart needed if no recipients
+  const recipientsData = analyticsData.topRecipients;
+  if (!recipientsData || recipientsData.length === 0) {
+    return;
   }
 
-  // Prepare data for horizontal bar chart
-  const labels = recipients.map((r) => {
-    // Shorten long names for display
-    const name = r.recipient;
-    return name.length > 15 ? name.substring(0, 15) + "..." : name;
-  });
-  const data = recipients.map((r) => Math.abs(r.total));
+  const labels = recipientsData.map((item) => item.recipient);
+  const amounts = recipientsData.map((item) => Math.abs(item.total));
 
   new Chart(ctx, {
-    type: "bar",
+    type: "doughnut",
     data: {
       labels: labels,
       datasets: [
         {
-          label: "Total Sent",
-          data: data,
-          backgroundColor: categoryColors.slice(0, recipients.length),
-          borderColor: chartColors.primary,
-          borderWidth: 1,
+          data: amounts,
+          backgroundColor: categoryColors,
+          borderWidth: 2,
+          borderColor: "#fff",
         },
       ],
     },
     options: {
-      indexAxis: "y",
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          display: false,
+          position: "bottom",
         },
         tooltip: {
           callbacks: {
-            title: function (tooltipItems) {
-              const index = tooltipItems[0].dataIndex;
-              return recipients[index].recipient;
-            },
             label: function (context) {
-              const index = context.dataIndex;
-              const recipient = recipients[index];
-              return [
-                `Total: GHC${Math.abs(recipient.total).toFixed(2)}`,
-                `Transactions: ${recipient.count}`,
-                `Average: GHC${Math.abs(recipient.avg_amount).toFixed(2)}`,
-              ];
+              return `${context.label}: GHC${context.raw.toFixed(2)}`;
             },
-          },
-        },
-      },
-      scales: {
-        x: {
-          beginAtZero: true,
-          title: {
-            display: true,
-            text: "Amount (GHC)",
           },
         },
       },
     },
   });
 }
-
-// Helper function to show no data message
-function showNoDataMessage(canvasId, message) {
-  const canvas = document.getElementById(canvasId);
-  const container = canvas.parentElement;
-
-  container.innerHTML = `
-        <div class="no-data">
-            <i class="fas fa-chart-bar"></i>
-            <p>${message}</p>
-        </div>
-    `;
-}
-
 </script>
-<script src="../dashboard/script.js"></script>
 </body>
 </html>

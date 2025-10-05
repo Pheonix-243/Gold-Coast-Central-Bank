@@ -55,7 +55,15 @@ $securityLogs = mysqli_fetch_all($stmt->get_result(), MYSQLI_ASSOC);
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['toggle_2fa'])) {
-        $newStatus = $securitySettings['two_factor_enabled'] ? 0 : 1;
+        // Get current status first
+        $sql = "SELECT two_factor_enabled FROM accounts_info WHERE account = ?";
+        $stmt = mysqli_prepare($con, $sql);
+        mysqli_stmt_bind_param($stmt, "s", $account);
+        mysqli_stmt_execute($stmt);
+        $currentStatus = mysqli_fetch_assoc($stmt->get_result())['two_factor_enabled'];
+        
+        // Toggle the status (1 becomes 0, 0 becomes 1)
+        $newStatus = $currentStatus ? 0 : 1;
         
         $sql = "UPDATE accounts_info SET two_factor_enabled = ? WHERE account = ?";
         $stmt = mysqli_prepare($con, $sql);
@@ -63,7 +71,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if (mysqli_stmt_execute($stmt)) {
             $_SESSION['success_message'] = "Two-factor authentication " . ($newStatus ? "enabled" : "disabled") . " successfully.";
-            $securitySettings['two_factor_enabled'] = $newStatus;
+            // Refresh security settings
+            $sql = "SELECT two_factor_enabled, last_login_device, last_login 
+                    FROM accounts_info 
+                    WHERE account = ?";
+            $stmt = mysqli_prepare($con, $sql);
+            mysqli_stmt_bind_param($stmt, "s", $account);
+            mysqli_stmt_execute($stmt);
+            $securitySettings = mysqli_fetch_assoc($stmt->get_result());
+            
+            // Redirect to avoid form resubmission
+            header("Location: security.php");
+            exit();
         } else {
             $_SESSION['error_message'] = "Failed to update two-factor authentication settings.";
         }
@@ -512,6 +531,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             opacity: 0.8;
             margin: 0;
         }
+
+        .security-features {
+            margin-top: var(--space-md);
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-sm);
+            color: var(--text-secondary);
+        }
+
+        .feature-item i {
+            color: var(--success);
+            width: 16px;
+        }
+
+        .badge.current {
+            background: var(--success);
+            color: white;
+            padding: 4px 8px;
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-xs);
+            font-weight: 500;
+        }
+
+        .tips-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+        }
+
+        .tip-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-sm);
+            border-radius: var(--radius-md);
+            background: var(--bg-secondary);
+        }
+
+        .tip-item i {
+            width: 16px;
+        }
+
+        .text-success {
+            color: var(--success);
+        }
+
+        .quick-actions {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+        }
     </style>
 </head>
 
@@ -646,8 +720,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="security-header">
                             <h3>Two-Factor Authentication</h3>
                             <form method="POST" class="toggle-form">
+                                <input type="hidden" name="toggle_2fa" value="1">
                                 <label class="toggle-switch">
-                                    <input type="checkbox" name="toggle_2fa" <?= $securitySettings['two_factor_enabled'] ? 'checked' : '' ?> onchange="this.form.submit()">
+                                    <input type="checkbox" <?= $securitySettings['two_factor_enabled'] ? 'checked' : '' ?> onchange="this.form.submit()">
                                     <span class="toggle-slider"></span>
                                 </label>
                             </form>
