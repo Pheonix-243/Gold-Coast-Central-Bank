@@ -224,6 +224,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <input type="password" class="form-control" id="password" name="password" 
                                            placeholder="Password" required>
                                     <label for="password">Password</label>
+                                    <span class="password-toggle" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; z-index: 10;">
+                                        <i class="fas fa-eye" id="togglePassword"></i>
+                                    </span>
                                     <div class="invalid-feedback">Please provide your password.</div>
                                 </div>
                             </div>
@@ -248,6 +251,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
                         </form>
 
+                        <!-- Password Toggle Script -->
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                const togglePassword = document.querySelector('#togglePassword');
+                                const password = document.querySelector('#password');
+                                
+                                togglePassword.addEventListener('click', function() {
+                                    // Toggle the type attribute
+                                    const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+                                    password.setAttribute('type', type);
+                                    
+                                    // Toggle the eye icon
+                                    this.classList.toggle('fa-eye');
+                                    this.classList.toggle('fa-eye-slash');
+                                });
+                            });
+                        </script>
                     
                     </div>
                 </div>
@@ -274,4 +294,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 </div>
 
-
+<?php include 'includes/footer.php'; ?>
