@@ -123,7 +123,7 @@ include 'includes/header.php';
     </style>
 </head>
 <body>
-
+<!-- 
 <div class="quick-login-container">
   <div class="card quick-login shadow-lg">
     <div class="card-body">
@@ -149,32 +149,11 @@ include 'includes/header.php';
       </div>
     </div>
   </div>
-</div>
+</div> -->
 
 <?php include 'hero_slider.php'; ?>
 
-<!-- Announcement Bar -->
-<div class="announcement-bar bg-navy text-white py-2">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <marquee behavior="scroll" direction="left" scrollamount="5">
-                    <i class="fas fa-bullhorn me-2 text-gold"></i> 
-                    <strong>GCC Bank announces new fixed deposit rates at 12.5% p.a. for 12-month term.</strong> 
-                    <span class="mx-3">|</span>
-                    <i class="fas fa-exclamation-circle me-2 text-gold"></i> 
-                    <strong>Enhanced security measures now active for all online transactions.</strong>
-                    <span class="mx-3">|</span>
-                    <i class="fas fa-trophy me-2 text-gold"></i> 
-                    <strong>Voted Best Digital Bank in West Africa 2024 by Global Finance Magazine.</strong>
-                </marquee>
-            </div>
-            <div class="col-md-4 text-md-end">
-                <small><i class="fas fa-phone-alt me-1 text-gold"></i> 24/7 Customer Support: +233 30 911 911</small>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <!-- Rates Ticker -->
 <div class="rates-ticker bg-light-gray py-2 border-bottom">
