@@ -15,6 +15,10 @@
     box-sizing: border-box; 
 }
 
+html, body {
+    height: 100%;
+}
+
 body {
     font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
     overflow-x: hidden;
@@ -22,21 +26,34 @@ body {
     font-weight: 400;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    display: flex;
+    flex-direction: column;
 }
 
 /* ===== HERO SLIDER CONTAINER ===== */
+/* .hero-slider {
+    background: linear-gradient(135deg, #0f1419 0%, #1a2332 50%, #2c3e50 100%);
+    position: relative;
+    width: 100%;
+    flex: 1;
+    min-height: 500px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05);
+    margin: 0;
+} */
+
 .hero-slider {
     background: linear-gradient(135deg, #0f1419 0%, #1a2332 50%, #2c3e50 100%);
     position: relative;
     width: 100%;
-    height: 70vh;
-    min-height: 500px;
-    max-height: 800px;
+    flex: 1 0 auto;
+    min-height: 0;
+    height: calc(100vh - 40px); /* Adjusted to account for announcement bar */
     overflow: hidden;
     box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05);
     margin: 0;
-    margin-top: -8px;
 }
+
 
 .hero-slider::before {
     content: '';
@@ -71,6 +88,10 @@ body {
     justify-content: flex-start;
     padding: 0 8%;
     transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    /* Prevent transform issues that cause peeking */
+    transform: translateX(0) scale(1);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
 }
 
 .hero-slider .slide::before {
@@ -279,7 +300,6 @@ body {
     justify-content: center;
     opacity: 0.75;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-    /* display: none; */
 }
 
 .hero-slider .slider-arrow:hover {
@@ -293,20 +313,96 @@ body {
 .hero-slider .slider-arrow.left { left: 32px; }
 .hero-slider .slider-arrow.right { right: 32px; }
 
+/* ===== SUBTLE ANNOUNCEMENT BAR ===== */
+/* .announcement-bar {
+    background: rgba(15, 20, 25, 0.95);
+    color: rgba(255, 255, 255, 0.85);
+    border-bottom: 1px solid rgba(255, 215, 0, 0.15);
+    padding: 0.35rem 0;
+    width: 100%;
+    flex-shrink: 0;
+    font-size: 0.8rem;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+} */
+
+.announcement-bar {
+    background: rgba(15, 20, 25, 0.95);
+    color: rgba(255, 255, 255, 0.85);
+    border-bottom: 1px solid rgba(255, 215, 0, 0.15);
+    padding: 0.35rem 0;
+    width: 100%;
+    flex-shrink: 0;
+    font-size: 0.8rem;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    height: 40px; /* Fixed height */
+    display: flex;
+    align-items: center;
+}
+
+.announcement-bar marquee {
+    padding-top: 1px;
+}
+
+.announcement-bar .container {
+    max-width: 100%;
+    padding: 0 15px;
+}
+
+.announcement-bar .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    margin: 0 -15px;
+}
+
+.announcement-bar .col-md-8 {
+    flex: 0 0 66.666667%;
+    max-width: 66.666667%;
+    padding: 0 15px;
+}
+
+.announcement-bar .col-md-4 {
+    flex: 0 0 33.333333%;
+    max-width: 33.333333%;
+    padding: 0 15px;
+    text-align: right;
+}
+
+.text-gold {
+    color: rgba(255, 215, 0, 0.7);
+}
+
+.text-md-end {
+    text-align: right;
+}
+
+.announcement-bar strong {
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.announcement-bar .mx-3 {
+    margin: 0 12px;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.announcement-bar small {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
 /* ===== RESPONSIVE STYLES ===== */
 @media (max-width: 1200px) {
     .hero-slider {
-        height: 65vh;
         min-height: 450px;
-        max-height: 700px;
     }
 }
 
 @media (max-width: 992px) {
     .hero-slider {
-        height: 60vh;
         min-height: 400px;
-        max-height: 600px;
     }
     
     .hero-slider .slide-content h4 {
@@ -323,13 +419,16 @@ body {
         padding: 14px 28px;
         font-size: 1rem;
     }
+    
+    .announcement-bar {
+        padding: 0.3rem 0;
+        font-size: 0.75rem;
+    }
 }
 
 @media (max-width: 768px) {
     .hero-slider {
-        height: 55vh;
         min-height: 350px;
-        max-height: 500px;
     }
     
     .hero-slider .slide {
@@ -393,13 +492,29 @@ body {
         width: 12px;
         height: 12px;
     }
+    
+    /* Announcement bar mobile styles */
+    .announcement-bar .col-md-4 {
+        text-align: center;
+        margin-top: 0.3rem;
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    
+    .announcement-bar .col-md-8 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    
+    .announcement-bar {
+        padding: 0.25rem 0;
+        font-size: 0.7rem;
+    }
 }
 
 @media (max-width: 576px) {
     .hero-slider {
-        height: 50vh;
         min-height: 300px;
-        max-height: 450px;
     }
     
     .hero-slider .slide-content {
@@ -437,13 +552,20 @@ body {
         width: 10px;
         height: 10px;
     }
+    
+    .announcement-bar {
+        padding: 0.2rem 0;
+        font-size: 0.65rem;
+    }
+    
+    .announcement-bar small {
+        font-size: 0.7rem;
+    }
 }
 
 @media (max-width: 400px) {
     .hero-slider {
-        height: 45vh;
         min-height: 280px;
-        max-height: 400px;
     }
     
     .hero-slider .slide-content h4 {
@@ -469,35 +591,23 @@ body {
     .hero-slider .slider-dots {
         bottom: 15px;
     }
-
-
-
-    /* Announcement Bar */
-.announcement-bar {
-    font-size: 0.85rem;
-    border-bottom: 1px solid rgba(255, 215, 0, 0.2);
-    padding: 0.5rem 0;
-}
-
-.announcement-bar marquee {
-    padding-top: 2px;
-}
-
-
-@media (max-width: 767px) {  
-    .announcement-bar .col-md-4 {
-        text-align: center;
-        margin-top: 0.5rem;
+    
+    .announcement-bar {
+        padding: 0.18rem 0;
     }
 }
+
+
+
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 </head>
 <body>
 
-<!-- Rest of your HTML content remains exactly the same -->
+<!-- Hero Slider -->
 <div class="hero-slider">
+    hiii
     <button class="slider-arrow left" aria-label="Previous Slide">&#8592;</button>
     <div class="slider-track">
         <!-- Slide 1 -->
@@ -565,9 +675,8 @@ body {
             </div>
         </div>
         <!-- Slide 9 -->
-        <!-- <div class="slide" style="background-image: url('./assets/images/pic9.jpg')" data-index="8"> -->
         <div class="slide" style="background-image: url('./assets/images/download.png')" data-index="8">
-        <div class="slide-content">
+            <div class="slide-content">
                 <h4>Fast International<br> Transfers</h4>
                 <p>Send money across borders in seconds with live exchange rates and transparent fees.</p>
                 <a href="#" class="btn">Send Money</a>
@@ -614,25 +723,21 @@ body {
     </div>
 </div>
 
-
-<!-- Announcement Bar -->
-<div class="announcement-bar bg-navy text-white py-2">
+<!-- Subtle Announcement Bar -->
+<div class="announcement-bar">
     <div class="container">
         <div class="row align-items-center">
             <div class="col-md-8">
                 <marquee behavior="scroll" direction="left" scrollamount="5">
-                    <i class="fas fa-bullhorn me-2 text-gold"></i> 
                     <strong>GCC Bank announces new fixed deposit rates at 12.5% p.a. for 12-month term.</strong> 
                     <span class="mx-3">|</span>
-                    <i class="fas fa-exclamation-circle me-2 text-gold"></i> 
                     <strong>Enhanced security measures now active for all online transactions.</strong>
                     <span class="mx-3">|</span>
-                    <i class="fas fa-trophy me-2 text-gold"></i> 
                     <strong>Voted Best Digital Bank in West Africa 2024 by Global Finance Magazine.</strong>
                 </marquee>
             </div>
             <div class="col-md-4 text-md-end">
-                <small><i class="fas fa-phone-alt me-1 text-gold"></i> 24/7 Customer Support: +233 30 911 911</small>
+                <small>24/7 Customer Support: +233 30 911 911</small>
             </div>
         </div>
     </div>
@@ -732,6 +837,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const transformValue = -currentIndex * 100;
         sliderTrack.style.transition = `transform ${transitionDuration}ms ${easeInOut}`;
         sliderTrack.style.transform = `translateX(${transformValue}%)`;
+        
         if (currentIndex === slideCount) {
             setTimeout(() => {
                 sliderTrack.style.transition = 'none';
@@ -772,6 +878,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateActiveSlide() {
         slides.forEach((slide, index) => {
             slide.classList.remove('active');
+            // Reset transform to prevent peeking
+            slide.style.transform = 'translateX(0) scale(1)';
+            
             if (index === currentIndex || (currentIndex === slideCount && index === 0)) {
                 slide.classList.add('active');
             }
