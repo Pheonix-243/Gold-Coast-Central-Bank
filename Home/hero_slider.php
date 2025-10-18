@@ -607,7 +607,7 @@ body {
 
 <!-- Hero Slider -->
 <div class="hero-slider">
-    hiii
+    hiiii
     <button class="slider-arrow left" aria-label="Previous Slide">&#8592;</button>
     <div class="slider-track">
         <!-- Slide 1 -->
